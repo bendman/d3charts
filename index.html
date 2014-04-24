@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>D3 Chart Examples</title>
+
+	<style>
+	body {
+		background:#EFEFEF;
+	}
+	</style>
+
+	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<!--[if lte IE 8]><script src="//cdnjs.cloudflare.com/ajax/libs/r2d3/0.2.0/r2d3.min.js"></script><![endif]-->
+	<!--[if gte IE 9]><!-->
+		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.5/d3.min.js"></script>
+	<!--<![endif]-->
+</head>
+<body>
+	
+	<div id="pie"></div>
+	<div id="stackedbar"></div>
+
+	<script src="d3.jqcharts.core.js"></script>
+	<script src="d3.jqcharts.pie.js"></script>
+	<script src="d3.jqcharts.stackedbar.js"></script>
+
+	<script type="text/javascript">
+	var pieData = [{
+			label: 'Renewed',
+			value: 3230,
+			color: '#F5B961'
+		}, {
+			label: 'Not Renewed',
+			value: 1762,
+			color: '#149195'
+		}, {
+			label: 'Outstanding',
+			value: 881,
+			color: '#DC4740'
+		}];
+
+	/*
+		The data might be better compressed like this:
+
+		{
+			label: [ 'Renewed',		'Not Renewed',	'Outstanding' ],
+			value: [ 3230,			1762,			881 ],
+			color: [ '#F5B961',		'#149195',		'#DC4740']
+		}
+
+		this would allow for a uniform data structure between charts, even nesting such as this for stacked bar charts:
+
+		{
+			label: [ 'Message 1',			'Message 1',			'Message 3'],
+			value: [ [14,		4],			[7,			7],			[5,			2] ],
+			color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
+		}
+	 */
+	var charts = {};
+
+	$(function(){
+		setTimeout(buildPie, 300);
+	});
+
+	// render pie
+	function buildPie() {
+		// charts.pie = new jqCharts.Pie({
+		// 	element: '#pie',
+		// 	height: 380,
+		// 	width: 450,
+		// 	strokeColor: '#785F7F',
+		// 	data: pieData
+		// });
+		charts.pie = new jqCharts.Pie({
+			element: '#pie',
+			height: 380,
+			width: 450,
+			strokeColor: '#785F7F',
+			label: [ 'Renewed',		'Not Renewed',	'Outstanding' ],
+			value: [ 3230,			1762,			881 ],
+			color: [ '#F5B961',		'#149195',		'#DC4740']
+			// data: [
+			// 	[	3230,	'Renewed',		'#F5B961'	],
+			// 	[	1762,	'Not Renewed',	'#149195'	],
+			// 	[	881,	'Outstanding',	'#DC4740'	]
+			// ]
+		});
+	}
+
+	// setInterval(updateChart, 3e3);
+
+	// render stacked bar
+	function buildBar(){
+		charts.bar = new jqCharts.StackedBar({
+			element: '#stackedbar',
+			yLabel: 'Recipients',
+			// data: [{"label":0,"value":[11,8,4,10]},{"label":1,"value":[1,10,12,13]},{"label":2,"value":[14]},{"label":3,"value":[4,8,13]},{"label":4,"value":[8]},{"label":5,"value":[7,14]},{"label":6,"value":[6,6,14]},{"label":7,"value":[6,9,9,2]},{"label":8,"value":[7,15,12]},{"label":9,"value":[7]},{"label":10,"value":[8,14,14]},{"label":11,"value":[13,4,1,4]},{"label":12,"value":[8]}]
+
+// Option 1: array of arrays grouped by point
+data: [
+	[	[ 14, 4 ],	'Message 1',	[ '#C2D8D6', '#159097' ]	],
+	[	[  7, 7 ],	'Message 2',	[ '#EEDDC1', '#EAA337' ]	],
+	[	[  5, 2 ],	'Message 3',	[ '#EE8F89', '#D13E37' ]	]
+]
+
+// Option 2: array of arrays grouped by type
+data: [
+	[ 'Message 1',				'Message 1',				'Message 3' ],
+	[ [14,		4],				[7,			7],				[5,			2] ],
+	[ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],		['#EE8F89',	'#D13E37'] ]
+]
+
+// Option 3: object of arrays by type
+data: {
+	label: [ 'Message 1',			'Message 1',			'Message 3'],
+	value: [ [14,		4],			[7,			7],			[5,			2] ],
+	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
+}
+
+// Option 4: array of objects
+data: [{
+	label: 'Message 1',
+	value: [14, 4],
+	color: ['#C2D8D6', '#159097'] 
+}, {
+	label: 'Message 2',
+	value: [7, 7],
+	color: ['#EEDDC1', '#EAA337']
+}, {
+	label: 'Message 3',
+	value: [5, 2],
+	color: ['#EE8F89', '#D13E37']
+}]
+		});
+	}
+	</script>
+</body>
+</html>
