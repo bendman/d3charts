@@ -1,8 +1,10 @@
 ;(function(window, d3, $, utils){
 	var DEFAULTS = {
-	//	value: [],
-	//	label: [],
-	//	color: [],
+	// 	data: {
+	//		value: [],
+	//		label: [],
+	//		color: [],
+	//	},
 		width: 300,
 		height: 300,
 		startAngle: 45,
@@ -19,7 +21,7 @@
 	function PieChart(cfg) {
 		var self = this;
 		
-		this.options = $.extend({}, DEFAULTS, cfg);
+		this.options = $.extend(true, {}, DEFAULTS, cfg);
 
 		// get utility methods specific to this instance
 		buildUtils.call(this);
@@ -34,17 +36,16 @@
 		this.refresh();
 	}
 
-	
 	// Draw the pie arcs
 	PieChart.prototype.refresh = function() {
 		this._.oldPieData = this._.pieData;
-		var arrayBuffer = zeroFillArray(this.options.data, this._.oldData);
-		this._.total = d3.sum(this.options.data, getDatumValue);
-		this._.pieData = this._.getPieData(arrayBuffer);
+		var dataBuffer = zeroFillData(this.options.data, this._.oldData);
+		this._.total = d3.sum(dataBuffer.value);
+		this._.pieData = this._.getPieData(dataBuffer.value);
 		
 		this.slices = this.pie.selectAll('g')
-			.data(this._.pieData, function(d){
-				return d.data.label;
+			.data(this._.pieData, function(d, i){
+				return dataBuffer.label[i];
 			});
 		
 		var enterGroups = this.slices.enter()
@@ -71,40 +72,37 @@
 		var idx;
 		if (typeof key === 'undefined') {
 			// get all
-			return $.extend(true, [], this.options.data);
+			return $.extend(true, {}, this.options.data);
 			
 		} else if (typeof key === 'string' && typeof val === 'undefined') {
 			// get one by label
-			idx = utils.indexByProp(this.options.data, 'label', key);
-			return idx !== -1 ? this.options.data[idx].value : null;
+			idx = this.options.data.label.indexOf(key);
+			return idx !== -1 ? this.options.data.value[idx] : null;
 												 
-		} else if (key instanceof Array) {
-			// update an array of values
-			this._.oldData = this.options.data;
-			this.options.data = zeroFillArray(key, this._.oldData);
-			this.refresh();
-				
 		} else if (typeof key === 'string') {
-			// update an one value by label
-			this.value({label: key, value: val});
+			// update one value by label
+			return this.value({label: key, value: val});
 			
 		} else if (typeof key === 'object') {
 			// update or append value object
-			this._.oldData = $.extend(true, [], this.options.data);
-			idx = utils.indexByProp(this.options.data, 'label', key.label);
+			this._.oldData = $.extend(true, {}, this.options.data);
+			idx = this.options.data.label.indexOf(key.label);
 			
 			if (idx !== -1) {
 				// update
-				$.extend(this.options.data[idx], key);
+				this.options.data.value[idx] = key.value;
+				this.options.data.label[idx] = key.label;
+				this.options.data.color[idx] = key.color;
 			} else {
 				// append
-				this.options.data.push(key);
+				this.options.data.value.push(key.value);
+				this.options.data.label.push(key.label);
+				this.options.data.color.push(key.color);
 			}
-			
-			this.options.data = zeroFillArray(this.options.data, this._.oldData);
-			this.refresh();
 		}
-		
+
+		this.refresh();
+
 		return this;
 	};
 
@@ -116,7 +114,7 @@
 		var self = this;
 
 		this._ = {};
-		this._.oldData = [];
+		this._.oldData = {};
 		this._.pieData = [];
 		this._.oldPieData = [];
 		this._.innerRadius = this.options.innerRadius;
@@ -152,10 +150,8 @@
 		
 		// function to fill slice colors
 		this._.fillColors = function(d, i){
-			if (d.data.color) {
-				return d.data.color;
-			} else if (typeof self.options.fillColor === 'string') {
-				return self.options.fillColor;
+			if (self.options.data.color[i]) {
+				return self.options.data.color[i];
 			}
 		};
 		
@@ -213,25 +209,22 @@
 
 	function degToRad(deg) {return deg * Math.PI / 180;}
 
-	function getDatumValue(d) {return d.value;}
+	function getDatumValue(d) {return d;}
 	
 	// merge two arrays of objects, filling missing objects with a value of 0
-	function zeroFillArray(newA, oldA) {
-		var keys = [], i, I;
-		newA = $.extend(true, [], newA);
+	function zeroFillData(newData, oldData) {
+		var i, I;
 		
-		for (i=0, I=newA.length; i<I; i++) {
-			if (newA[i].label) keys.push(newA[i].label);
-		}
-		
-		for (i=0, I=oldA.length; i<I; i++) {
-			// object is labelled and missing from new array
-			if (oldA[i].label && keys.indexOf(oldA[i].label) === -1) {
-				newA.splice(i, 0, $.extend(true, {}, oldA[i], {value: 0}));
+		if (!oldData.label) return newData;
+		for (i=0, I=oldData.label.length; i<I; i++) {
+			// value is labelled and missing from new data
+			if (oldData.label[i] && newData.label.indexOf(oldData.label[i]) === -1) {
+				newData.label.splice(i, 0, oldData.label[i]);
+				newData.value.splice(i, 0, oldData.value[i]);
 			}
 		}
 		
-		return newA;
+		return newData;
 	}
 	
 }(window, d3, jQuery, jqCharts.utils));
