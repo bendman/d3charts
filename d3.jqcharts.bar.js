@@ -1,4 +1,5 @@
-;(function(window, d3, $, utils){
+;(function(window, d3, $, core){
+	var utils = core.utils;
 	var DEFAULTS = {
 		width: 500,
 		height: 300,
@@ -12,10 +13,83 @@
 	};
 
 	function BarChart(cfg) {
-		var self = this;
-		
 		this.options = $.extend({}, DEFAULTS, cfg);
+
+		// get utility methods specific to this instance
+		buildUtils.call(this);
 		
+		this.svg = d3.select(this.options.element).append('svg')
+			.attr('width', this.options.width)
+			.attr('height', this.options.height);
+		
+		// build main groups
+		this.diagram = this.svg.append('g');
+		this.chart = this.diagram.append('g')
+			.attr('transform', 'translate('+utils.cleanPx(this._.labelMargin)+',0.5)');
+
+		if (this.options.yLabel) {
+			this.chart.append('text')
+				.text(this.options.yLabel)
+				.attr('x', this._.diagramHeight / -2)
+				.attr('y', this.options.labelSize * -1)
+				.attr('transform', 'rotate(-90, 0, 0)')
+				.call(this._.labelSettings);
+		}
+
+		this.chart.append('rect')
+			.attr('height', this._.diagramHeight)
+			.attr('width', this._.diagramWidth)
+			.attr('fill', this.options.diagramFillColor)
+			.attr('stroke-width', 1)
+			.attr('stroke', this.options.diagramStrokeColor);
+		
+		this.refresh();
+	}
+	
+	// Draw the pie arcs
+	BarChart.prototype.refresh = function() {
+		var self = this;
+
+		this._.barsData = this._.getBarsData(this.options.data);
+		this._.scaleY.domain([0, d3.max(this._.barsData, function(d){
+			return d.total;
+		})]);
+		this._.scaleX.domain($.map(this._.barsData, function(d,i){
+			return d.label;
+		}));
+
+		this.bars = this.chart.selectAll('g')
+			.data(this._.barsData, function(d){
+				return d.label;
+			});
+
+		var enterBars = this.bars.enter()
+			.append('g')
+				.attr('transform', function(d,i){
+					return 'translate('+utils.cleanPx(self._.scaleX(d.label))+',-0.5)';
+				});
+
+		enterBars.append('text')
+			.text(function(d){
+				return d.label;
+			})
+			.attr('y', this._.diagramHeight + this._.labelMargin - (this.options.labelSize / 2))
+			.attr('x', this._.scaleX.rangeBand() / 2)
+			.call(this._.labelSettings);
+
+		enterBars.each(this._.updateBar);
+		this.bars.each(this._.updateBar);
+	};
+	
+	// Set bar values
+	BarChart.prototype.value = core.common.value;
+	
+	window.jqCharts.Bar = BarChart;
+	
+	// Utility Functions
+	function buildUtils() {
+		var self = this;
+
 		this._ = {};
 		this._.oldData = [];
 		this._.barsData = [];
@@ -108,111 +182,6 @@
 					return self._.scaleY(d.y1);
 				});
 		};
-		
-		this.svg = d3.select(this.options.element).append('svg')
-			.attr('width', this.options.width)
-			.attr('height', this.options.height);
-		
-		// build main groups
-		this.diagram = this.svg.append('g');
-		this.chart = this.diagram.append('g')
-			.attr('transform', 'translate('+utils.cleanPx(this._.labelMargin)+',0.5)');
-
-		if (this.options.yLabel) {
-			this.chart.append('text')
-				.text(this.options.yLabel)
-				.attr('x', this._.diagramHeight / -2)
-				.attr('y', this.options.labelSize * -1)
-				.attr('transform', 'rotate(-90, 0, 0)')
-				.call(this._.labelSettings);
-		}
-
-		this.chart.append('rect')
-			.attr('height', this._.diagramHeight)
-			.attr('width', this._.diagramWidth)
-			.attr('fill', this.options.diagramFillColor)
-			.attr('stroke-width', 1)
-			.attr('stroke', this.options.diagramStrokeColor);
-		
-		this.refresh();
 	}
 	
-	// Draw the pie arcs
-	BarChart.prototype.refresh = function() {
-		var self = this;
-
-		this._.barsData = this._.getBarsData(this.options.data);
-		this._.scaleY.domain([0, d3.max(this._.barsData, function(d){
-			return d.total;
-		})]);
-		this._.scaleX.domain($.map(this._.barsData, function(d,i){
-			return d.label;
-		}));
-
-		this.bars = this.chart.selectAll('g')
-			.data(this._.barsData, function(d){
-				return d.label;
-			});
-
-		var enterBars = this.bars.enter()
-			.append('g')
-				.attr('transform', function(d,i){
-					return 'translate('+utils.cleanPx(self._.scaleX(d.label))+',-0.5)';
-				});
-
-		enterBars.append('text')
-			.text(function(d){
-				return d.label;
-			})
-			.attr('y', this._.diagramHeight + this._.labelMargin - (this.options.labelSize / 2))
-			.attr('x', this._.scaleX.rangeBand() / 2)
-			.call(this._.labelSettings);
-
-		enterBars.each(this._.updateBar);
-		this.bars.each(this._.updateBar);
-	};
-	
-	// Set bar values
-	BarChart.prototype.value = function(key, val) {
-		var idx;
-		if (typeof key === 'undefined') {
-			// get all
-			return $.extend(true, {}, this.options.data);
-			
-		} else if (typeof key === 'string' && typeof val === 'undefined') {
-			// get one by label
-			idx = this.options.data.label.indexOf(key);
-			return idx !== -1 ? this.options.data.value[idx] : null;
-												 
-		} else if (typeof key === 'string') {
-			// update one value by label
-			return this.value({label: key, value: val});
-			
-		} else if (typeof key === 'object') {
-			// update or append value object
-			this._.oldData = $.extend(true, {}, this.options.data);
-			idx = this.options.data.label.indexOf(key.label);
-			
-			if (idx !== -1) {
-				// update
-				this.options.data.value[idx] = key.value;
-				if (key.label) this.options.data.label[idx] = key.label;
-				if (key.color) this.options.data.color[idx] = key.color;
-			} else {
-				// append
-				this.options.data.value.push(key.value);
-				this.options.data.label.push(key.label);
-				this.options.data.color.push(key.color);
-			}
-		}
-
-		this.refresh();
-
-		return this;
-	};
-	
-	window.jqCharts.Bar = BarChart;
-	
-	// Utility Functions
-	
-}(window, d3, jQuery, jqCharts.utils));
+}(window, d3, jQuery, jqCharts));

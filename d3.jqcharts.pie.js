@@ -1,10 +1,6 @@
-;(function(window, d3, $, utils){
+;(function(window, d3, $, core){
+	var utils = core.utils;
 	var DEFAULTS = {
-	// 	data: {
-	//		value: [],
-	//		label: [],
-	//		color: [],
-	//	},
 		width: 300,
 		height: 300,
 		startAngle: 45,
@@ -19,8 +15,6 @@
 	};
 	
 	function PieChart(cfg) {
-		var self = this;
-		
 		this.options = $.extend(true, {}, DEFAULTS, cfg);
 
 		// get utility methods specific to this instance
@@ -68,43 +62,7 @@
 	};
 	
 	// Set pie values
-	PieChart.prototype.value = function(key, val) {
-		var idx;
-		if (typeof key === 'undefined') {
-			// get all
-			return $.extend(true, {}, this.options.data);
-			
-		} else if (typeof key === 'string' && typeof val === 'undefined') {
-			// get one by label
-			idx = this.options.data.label.indexOf(key);
-			return idx !== -1 ? this.options.data.value[idx] : null;
-												 
-		} else if (typeof key === 'string') {
-			// update one value by label
-			return this.value({label: key, value: val});
-			
-		} else if (typeof key === 'object') {
-			// update or append value object
-			this._.oldData = $.extend(true, {}, this.options.data);
-			idx = this.options.data.label.indexOf(key.label);
-			
-			if (idx !== -1) {
-				// update
-				this.options.data.value[idx] = key.value;
-				this.options.data.label[idx] = key.label;
-				if (key.color) this.options.data.color[idx] = key.color;
-			} else {
-				// append
-				this.options.data.value.push(key.value);
-				this.options.data.label.push(key.label);
-				this.options.data.color.push(key.color);
-			}
-		}
-
-		this.refresh();
-
-		return this;
-	};
+	PieChart.prototype.value = core.common.value;
 
 	window.jqCharts.Pie = PieChart;
 	
@@ -227,4 +185,4 @@
 		return newData;
 	}
 	
-}(window, d3, jQuery, jqCharts.utils));
+}(window, d3, jQuery, jqCharts));

@@ -71,10 +71,11 @@
 		}
 
 		chart.value(key, value);
+		return [key, value];
 	}
 	function updateCharts() {
-		updateChart(charts.pie, data.pie);
-		updateChart(charts.bar, data.barStacked);
+		console.log('pie', updateChart(charts.pie, data.pie));
+		console.log('bar', updateChart(charts.bar, data.barStacked));
 	}
 	</script>
 </body>

@@ -15,14 +15,14 @@ data.percentDonut = {
 
 // Bar (single)
 data.bar = {
-	value: [ 14,			7,				5 ],
+	value: [ 140,			70,				50 ],
 	label: [ 'Message 1',	'Message 2',	'Message 3'],
 	color: [ '#C2D8D6',		'#EEDDC1',		'#EE8F89' ]
 };
 
 // Bar (stacked)
 data.barStacked = {
-	value: [ [14,		4],			[7,			7],			[5,			2] ],
+	value: [ [140,		40],		[70,		70],		[50,			20] ],
 	label: [ 'Message 1',			'Message 2',			'Message 3'],
 	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
 };
