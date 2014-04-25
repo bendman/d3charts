@@ -22,9 +22,9 @@ data.bar = {
 
 // Bar (stacked)
 data.barStacked = {
-	value: [ [14,		4],			[7,			7,			5],		[5,			2] ],
-	label: [ 'Message 1',			'Message 2',					'Message 3'],
-	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337',	'#EEDDC1'],	['#EE8F89',	'#D13E37'] ]
+	value: [ [14,		4],			[7,			7],			[5,			2] ],
+	label: [ 'Message 1',			'Message 2',			'Message 3'],
+	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
 };
 
 // Line

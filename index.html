@@ -29,7 +29,7 @@
 	<script type="text/javascript">
 	var charts = {};
 
-	// $(buildPie);
+	$(buildPie);
 	$(buildBar);
 
 	// render pie
@@ -43,7 +43,7 @@
 		});
 	}
 
-	// setInterval(updateChart, 3e3);
+	setInterval(updateCharts, 2e3);
 
 	// render stacked bar
 	function buildBar(){
@@ -51,44 +51,30 @@
 			element: '#stackedbar',
 			yLabel: 'Recipients',
 			data: data.barStacked
-			// data: [{"label":0,"value":[11,8,4,10]},{"label":1,"value":[1,10,12,13]},{"label":2,"value":[14]},{"label":3,"value":[4,8,13]},{"label":4,"value":[8]},{"label":5,"value":[7,14]},{"label":6,"value":[6,6,14]},{"label":7,"value":[6,9,9,2]},{"label":8,"value":[7,15,12]},{"label":9,"value":[7]},{"label":10,"value":[8,14,14]},{"label":11,"value":[13,4,1,4]},{"label":12,"value":[8]}]
-
-			// // Option 1: array of arrays grouped by point
-			// data: [
-			// 	[	[ 14, 4 ],	'Message 1',	[ '#C2D8D6', '#159097' ]	],
-			// 	[	[  7, 7 ],	'Message 2',	[ '#EEDDC1', '#EAA337' ]	],
-			// 	[	[  5, 2 ],	'Message 3',	[ '#EE8F89', '#D13E37' ]	]
-			// ]
-
-			// // Option 2: array of arrays grouped by type
-			// data: [
-			// 	[ 'Message 1',				'Message 1',				'Message 3' ],
-			// 	[ [14,		4],				[7,			7],				[5,			2] ],
-			// 	[ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],		['#EE8F89',	'#D13E37'] ]
-			// ]
-
-			// // Option 3: object of arrays by type
-			// data: {
-			// 	label: [ 'Message 1',			'Message 1',			'Message 3'],
-			// 	value: [ [14,		4],			[7,			7],			[5,			2] ],
-			// 	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
-			// }
-
-			// // Option 4: array of objects
-			// data: [{
-			// 	label: 'Message 1',
-			// 	value: [14, 4],
-			// 	color: ['#C2D8D6', '#159097'] 
-			// }, {
-			// 	label: 'Message 2',
-			// 	value: [7, 7],
-			// 	color: ['#EEDDC1', '#EAA337']
-			// }, {
-			// 	label: 'Message 3',
-			// 	value: [5, 2],
-			// 	color: ['#EE8F89', '#D13E37']
-			// }]
 		});
+	}
+
+	// get them all animating
+	function updateChart(chart, data) {
+		var newData = $.extend(true, {}, data);
+		var keyIndex = Math.floor(Math.random() * newData.label.length);
+		var key = newData.label[keyIndex];
+		var max = d3.max(data.value, function(d){
+			if (d instanceof Array) return d3.max(d);
+			else return d;
+		});
+		var value = Math.ceil(Math.random() * max);
+
+		if (newData.value[keyIndex] instanceof Array) {
+			newData.value[keyIndex][Math.floor(Math.random() * newData.value[keyIndex].length)] = value;
+			value = newData.value[keyIndex];
+		}
+
+		chart.value(key, value);
+	}
+	function updateCharts() {
+		updateChart(charts.pie, data.pie);
+		updateChart(charts.bar, data.barStacked);
 	}
 	</script>
 </body>

@@ -77,28 +77,29 @@
 		
 		// function for binding arc update transition
 		this._.updateBar = function(barData, i){
-			var bar = d3.select(this).selectAll('rect')
+			var section = d3.select(this).selectAll('rect')
 				.data(barData);
 
-			bar.enter().append('rect')
+			section.enter().append('rect')
 					.attr('fill', function(d){ return d.color; })
 					.attr('height', 0)
-					.attr('y', function(d){ return self._.scaleY(d.y0); })
+					.attr('y', function(d, i){
+						return self._.diagramHeight;
+					})
 					.attr('width', self._.scaleX.rangeBand())
 					.call(self._.updateSection);
 
-			bar.call(self._.updateSection);
+			section.call(self._.updateSection);
 
-			bar.exit().remove();
+			section.exit().remove();
 
 			// this.bars.select('rect').call(this._.updateBar);
 		};
 		this._.updateSection = function() {
 			this.transition()
-				.ease('linear')
 				.duration(self.options.animationDuration / 2)
 				.delay(function(d,i){
-					return (i*self.options.animationDuration / d.total) + (d.bar / self._.barsData.length * (self.options.animationDuration - (self.options.animationDuration / 2)));
+					return (d.bar / self._.barsData.length * (self.options.animationDuration - (self.options.animationDuration / 2)));
 				})
 				.attr('height', function(d){
 					return self._.scaleY(d.y0) - self._.scaleY(d.y1);
@@ -150,7 +151,6 @@
 
 		this.bars = this.chart.selectAll('g')
 			.data(this._.barsData, function(d){
-				console.log(d.label);
 				return d.label;
 			});
 
