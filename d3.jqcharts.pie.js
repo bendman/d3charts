@@ -92,7 +92,7 @@
 				// update
 				this.options.data.value[idx] = key.value;
 				this.options.data.label[idx] = key.label;
-				this.options.data.color[idx] = key.color;
+				if (key.color) this.options.data.color[idx] = key.color;
 			} else {
 				// append
 				this.options.data.value.push(key.value);

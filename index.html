@@ -24,12 +24,13 @@
 	<script src="data-structures.js"></script>
 	<script src="d3.jqcharts.core.js"></script>
 	<script src="d3.jqcharts.pie.js"></script>
-	<script src="d3.jqcharts.stackedbar.js"></script>
+	<script src="d3.jqcharts.bar.js"></script>
 
 	<script type="text/javascript">
 	var charts = {};
 
-	$(buildPie);
+	// $(buildPie);
+	$(buildBar);
 
 	// render pie
 	function buildPie() {
@@ -46,9 +47,10 @@
 
 	// render stacked bar
 	function buildBar(){
-		charts.bar = new jqCharts.StackedBar({
+		charts.bar = new jqCharts.Bar({
 			element: '#stackedbar',
 			yLabel: 'Recipients',
+			data: data.barStacked
 			// data: [{"label":0,"value":[11,8,4,10]},{"label":1,"value":[1,10,12,13]},{"label":2,"value":[14]},{"label":3,"value":[4,8,13]},{"label":4,"value":[8]},{"label":5,"value":[7,14]},{"label":6,"value":[6,6,14]},{"label":7,"value":[6,9,9,2]},{"label":8,"value":[7,15,12]},{"label":9,"value":[7]},{"label":10,"value":[8,14,14]},{"label":11,"value":[13,4,1,4]},{"label":12,"value":[8]}]
 
 			// // Option 1: array of arrays grouped by point
