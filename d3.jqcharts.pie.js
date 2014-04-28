@@ -30,6 +30,8 @@
 		this.refresh();
 	}
 
+	PieChart.defaults = DEFAULTS;
+
 	// Draw the pie arcs
 	PieChart.prototype.refresh = function() {
 		this._.oldPieData = this._.pieData;

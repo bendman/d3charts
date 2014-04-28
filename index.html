@@ -18,8 +18,7 @@
 </head>
 <body>
 	
-	<div id="pie"></div>
-	<div id="stackedbar"></div>
+	<div id="target"></div>
 
 	<script src="data-structures.js"></script>
 	<script src="d3.jqcharts.core.js"></script>
@@ -29,37 +28,56 @@
 	<script type="text/javascript">
 	var charts = {};
 
+	jqCharts.Pie.defaults.strokeColor = '#785F7F';
+	jqCharts.Pie.defaults.strokeWidth = 0.8;
+	jqCharts.Pie.defaults.width = 250;
+	jqCharts.Pie.defaults.height = 250;
+	jqCharts.Pie.defaults.labelSize = 10;
+	jqCharts.Pie.defaults.labelDistance = 5;
+
+	jqCharts.Bar.defaults.width = 250;
+	jqCharts.Bar.defaults.height = 250;
+
 	$(buildPie);
 	$(buildBar);
+	setInterval(updateCharts, 2e3);
 
 	// render pie
 	function buildPie() {
-		charts.pie = new jqCharts.Pie({
-			element: '#pie',
-			height: 380,
-			width: 450,
-			strokeColor: '#785F7F',
+		var newChart = new jqCharts.Pie({
+			element: '#target',
 			data: data.pie
+		});
+		charts.pie = newChart;
+
+		$('body').on('update', function(){
+			updateChart(newChart, data.pie);
 		});
 	}
 
-	setInterval(updateCharts, 2e3);
-
 	// render stacked bar
 	function buildBar(){
-		charts.bar = new jqCharts.Bar({
-			element: '#stackedbar',
+		var newChart = new jqCharts.Bar({
+			element: '#target',
 			yLabel: 'Recipients',
 			data: data.barStacked
+		});
+		charts.bar = newChart;
+
+		$('body').on('update', function(){
+			updateChart(newChart, data.barStacked);
 		});
 	}
 
 	// get them all animating
+	function updateCharts() {
+		$('body').trigger('update');
+	}
 	function updateChart(chart, data) {
 		var newData = $.extend(true, {}, data);
 		var keyIndex = Math.floor(Math.random() * newData.label.length);
 		var key = newData.label[keyIndex];
-		var max = d3.max(data.value, function(d){
+		var max = d3.max(newData.value, function(d){
 			if (d instanceof Array) return d3.max(d);
 			else return d;
 		});
@@ -72,10 +90,6 @@
 
 		chart.value(key, value);
 		return [key, value];
-	}
-	function updateCharts() {
-		console.log('pie', updateChart(charts.pie, data.pie));
-		console.log('bar', updateChart(charts.bar, data.barStacked));
 	}
 	</script>
 </body>

@@ -39,6 +39,8 @@
 			this._.oldData = $.extend(true, {}, this.options.data);
 			idx = this.options.data.label.indexOf(key.label);
 			
+			this.options.data = $.extend(true, {}, this.options.data);
+
 			if (idx !== -1) {
 				// update
 				this.options.data.value[idx] = key.value;

@@ -45,6 +45,8 @@
 		
 		this.refresh();
 	}
+
+	BarChart.defaults = DEFAULTS;
 	
 	// Draw the pie arcs
 	BarChart.prototype.refresh = function() {
