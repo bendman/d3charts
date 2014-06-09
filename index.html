@@ -6,7 +6,30 @@
 
 	<style>
 	body {
-		background:#EFEFEF;
+		background:#FFF;
+	}
+	.target {
+		float: left;
+	}
+	div {
+		height: 200px;
+		width: 400px;
+	}
+	#t1 {
+		height: 200px;
+		width: 400px;
+	}
+	#t2 {
+		height: 200px;
+		width: 400px;
+	}
+	#t3 {
+		height: 500px;
+		width: 700px;
+	}
+	#t4 {
+		height: 500px;
+		width: 700px;
 	}
 	</style>
 
@@ -18,79 +41,52 @@
 </head>
 <body>
 	
-	<div id="target"></div>
+	<div id="t1" class="target"></div>
+	<div id="t2" class="target"></div>
+	<div id="t3" class="target"></div>
+	<div id="t4" class="target"></div>
 
 	<script src="data-structures.js"></script>
-	<script src="d3.jqcharts.core.js"></script>
-	<script src="d3.jqcharts.pie.js"></script>
-	<script src="d3.jqcharts.bar.js"></script>
+	<script src="d3.jqcharts.js"></script>
 
 	<script type="text/javascript">
-	var charts = {};
-
-	jqCharts.Pie.defaults.strokeColor = '#785F7F';
-	jqCharts.Pie.defaults.strokeWidth = 0.8;
-	jqCharts.Pie.defaults.width = 250;
-	jqCharts.Pie.defaults.height = 250;
-	jqCharts.Pie.defaults.labelSize = 10;
-	jqCharts.Pie.defaults.labelDistance = 5;
-
-	jqCharts.Bar.defaults.width = 250;
-	jqCharts.Bar.defaults.height = 250;
-
-	$(buildPie);
-	$(buildBar);
-	setInterval(updateCharts, 2e3);
-
-	// render pie
-	function buildPie() {
-		var newChart = new jqCharts.Pie({
-			element: '#target',
-			data: data.pie
+	$.fn.jqChart.options.global.animationDuration = 1500;
+	$(function(){
+		var pieChart = $('#t1').jqChart('pie', {
+			value: [ 3230,		1762,			881 ],
+			label: [ 'Renewed',	'Not Renewed',	'Outstanding' ],
+			color: [ '#d34046',	'#552884',		'#82b8b9' ]
 		});
-		charts.pie = newChart;
 
-		$('body').on('update', function(){
-			updateChart(newChart, data.pie);
-		});
-	}
+		window.pieChart = pieChart;
 
-	// render stacked bar
-	function buildBar(){
-		var newChart = new jqCharts.Bar({
-			element: '#target',
-			yLabel: 'Recipients',
-			data: data.barStacked
-		});
-		charts.bar = newChart;
-
-		$('body').on('update', function(){
-			updateChart(newChart, data.barStacked);
-		});
-	}
-
-	// get them all animating
-	function updateCharts() {
-		$('body').trigger('update');
-	}
-	function updateChart(chart, data) {
-		var newData = $.extend(true, {}, data);
-		var keyIndex = Math.floor(Math.random() * newData.label.length);
-		var key = newData.label[keyIndex];
-		var max = d3.max(newData.value, function(d){
-			if (d instanceof Array) return d3.max(d);
-			else return d;
-		});
-		var value = Math.ceil(Math.random() * max);
-
-		if (newData.value[keyIndex] instanceof Array) {
-			newData.value[keyIndex][Math.floor(Math.random() * newData.value[keyIndex].length)] = value;
-			value = newData.value[keyIndex];
-		}
-
-		chart.value(key, value);
-		return [key, value];
-	}
+		// $('#t1').jqChart('bar', data.bar, {
+		// 	frame: {
+		// 		borderColor: 'red'
+		// 	}
+		// });
+		// $('#t2').jqChart('area', data.line, {
+		// 	label: {
+		// 		x: 'x label',
+		// 		y: 'y label'
+		// 	}
+		// });
+		// $('#t3').jqChart('funnel', data.funnel, {
+		// 	axis: {
+		// 		fontColor: '#149195',
+		// 		fontSize: 20
+		// 	}
+		// });
+		// $('#t4').jqChart('area', data.area, {
+		// 	xLabel: 'Date',
+		// 	yLabel: 'Campaign Members',
+		// 	parseDate: '%m/%d/%Y',
+		// 	axis: {
+		// 		xFormat: '%-m/%-d'
+		// 	}
+		// });
+	});
 	</script>
+
 </body>
 </html>
