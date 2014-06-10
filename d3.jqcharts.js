@@ -110,6 +110,7 @@
     },
 
     setData: function(data) {
+      this._.oldData = $.extend(true, {}, this.data || {});
       this.data = $.extend(true, {}, data);
     }
 
@@ -261,6 +262,8 @@
       enterGroup.call(this._.updateArcGroup);
     },
     value: function(key, val) {
+      var idx, newData;
+
       if (key === undefined) {
 
         // get all
@@ -279,16 +282,15 @@
 
           // set one
           if (idx !== -1) {
-            this._.oldData = $.extend(true, {}, this.data);
-            this.data.value[idx] = val;
-            this.setData(this.data);
+            newData = $.extend(true, {}, this.data);
+            newData.value[idx] = val;
+            this.setData(newData);
           }
 
         }
       } else if (typeof key === 'object') {
 
         // set all
-        this._.oldData = $.extend(true, {}, this.data);
         this.setData(key);
 
       }
@@ -748,6 +750,40 @@
     },
     afterRender: function() {
       if (this.options.canZoom) addZoom.call(this);
+    },
+    value: function(key, val) {
+      if (key === undefined) {
+
+        // get all
+        return $.extend(true, {}, this.data);
+
+      } else if (typeof key === 'string') {
+
+        // actions by key
+        var idx = this.data.label.indexOf(key);
+        if (val === undefined) {
+
+          // get one
+          return idx !== -1 ? this.data.value[idx] : null;
+
+        } else {
+
+          // set one
+          if (idx !== -1) {
+            this._.oldData = $.extend(true, {}, this.data);
+            this.data.value[idx] = val;
+            this.setData(this.data);
+          }
+
+        }
+      } else if (typeof key === 'object') {
+
+        // set all
+        this._.oldData = $.extend(true, {}, this.data);
+        this.setData(key);
+
+      }
+      this.renderChart();
     }
   };
   

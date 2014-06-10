@@ -8,7 +8,7 @@ data.pie = {
 };
 data.pie2 = {
 	value: [ 1000,			2000],
-	label: [ 'Renewed',		'Not Renewed'],
+	label: [ 'Renewed',		'Outstanding'],
 	color: [ '#F5B961',		'#149195']
 };
 
@@ -30,6 +30,11 @@ data.barStacked = {
 	value: [ [140,		40],		[70,		70],		[50,			20] ],
 	label: [ 'Message 1',			'Message 2',			'Message 3'],
 	color: [ ['#C2D8D6','#159097'],	['#EEDDC1',	'#EAA337'],	['#EE8F89',	'#D13E37'] ]
+};
+data.barStacked2 = {
+	value: [ [140,		60],		[90,			10] ],
+	label: [ 'Message 1',			'Message 3'],
+	color: [ ['#C2D8D6','#159097'],	['#EE8F89',	'#D13E37'] ]
 };
 
 // Line
