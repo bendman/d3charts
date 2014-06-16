@@ -681,6 +681,12 @@
 
       // bar update transition
       this._.updateBar = function(barData) {
+        d3.select(this).transition()
+          .duration(self.options.animationDuration)
+            .attr('transform', function(d){
+              return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
+            });
+
         var section = d3.select(this).selectAll('rect')
           .data(barData);
 
@@ -690,18 +696,24 @@
           .attr('fill', function(d){ return d.color; })
           .attr('height', 0)
           .attr('y', function(){ return self._.height; })
-          .attr('width', self._.scaleX.rangeBand())
-          .call(self._.updateSection);
+          .attr('width', function(){
+            return self._.scaleX.rangeBand();
+          })
+          .call(self._.updateSection, true);
 
         section.call(self._.updateSection);
 
         section.exit().remove();
       };
-      this._.updateSection = function() {
+      this._.updateSection = function(section, isNew) {
         this.transition()
-          .duration(self.options.animationDuration / 2)
+          .duration(self._.hasRendered ? self.options.animationDuration : self.options.animationDuration / 2)
           .delay(function(d){
+            if (self._.hasRendered) return 0;
             return d.bar / self._.barsData.length * (self.options.animationDuration / 2);
+          })
+          .attr('width', function(){
+            return self._.scaleX.rangeBand();
           })
           .attr('height', function(d){
             return self._.scaleY(d.y0) - self._.scaleY(d.y1);
@@ -722,6 +734,8 @@
     renderChart: function() {
       var self = this;
 
+      var oldBandWidth = this._.scaleX.rangeBand();
+
       // prepare data and scales for rendering 
       this.prepareData();
 
@@ -735,7 +749,14 @@
           return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
         }).each(this._.updateBar);
 
-      this.$.bars.exit().remove();
+      this.$.bars.exit().selectAll('rect')
+        .transition()
+          .duration(this.options.animationDuration)
+            .attr('y', 170)
+            .attr('height', 0)
+            .attr('width', 0)
+            .call(translate, oldBandWidth / 2, 0)
+            .remove();
     },
     renderData: function() {
       var self = this;
@@ -749,6 +770,7 @@
         });
     },
     afterRender: function() {
+      this._.hasRendered = true;
       if (this.options.canZoom) addZoom.call(this);
     },
     value: function(key, val) {

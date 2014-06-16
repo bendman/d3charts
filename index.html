@@ -51,27 +51,27 @@
 
 	<script type="text/javascript">
 	$.fn.jqChart.options.global.animationDuration = 1500;
-	$(function(){
-		var data1 = data.pie;
-		var data2 = data.pie2;
-		var label = data1.label[1];
-		var offset = 2000;
-		var timer = 0;
-		var chart = $('#t1').jqChart('pie', data1);
+	// $(function(){
+	// 	var data1 = data.pie;
+	// 	var data2 = data.pie2;
+	// 	var label = data1.label[1];
+	// 	var offset = 2000;
+	// 	var timer = 0;
+	// 	var chart = $('#t1').jqChart('pie', data1);
 
-		console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-		console.log('get one', !(chart.jqChart('value', 'Message 1') instanceof $), chart.jqChart('value', label));
+	// 	console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
+	// 	console.log('get one', !(chart.jqChart('value', 'Message 1') instanceof $), chart.jqChart('value', label));
 
-		window.setTimeout(function(){
-			console.log('set all chain1', chart.jqChart('value', data2));
-		}, timer += offset);
-		window.setTimeout(function(){
-			console.log('set one chain1', chart.jqChart('value', label, data1.value[1]));
-		}, timer += offset);
-		window.setTimeout(function(){
-			console.log('set all chain2', chart.jqChart('value', data1));
-		}, timer += offset);
-	});
+	// 	window.setTimeout(function(){
+	// 		console.log('set all chain1', chart.jqChart('value', data2));
+	// 	}, timer += offset);
+	// 	window.setTimeout(function(){
+	// 		console.log('set one chain1', chart.jqChart('value', label, data1.value[1]));
+	// 	}, timer += offset);
+	// 	window.setTimeout(function(){
+	// 		console.log('set all chain2', chart.jqChart('value', data1));
+	// 	}, timer += offset);
+	// });
 	$(function(){
 		var data1 = data.barStacked;
 		var data2 = data.barStacked2;
@@ -79,6 +79,7 @@
 		var offset = 2000;
 		var timer = 0;
 		var chart = $('#t2').jqChart('bar', data1);
+		window.chart = chart;
 
 		console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
 		console.log('get one', !(chart.jqChart('value', 'Message 1') instanceof $), chart.jqChart('value', label));
