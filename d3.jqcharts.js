@@ -112,6 +112,42 @@
     setData: function(data) {
       this._.oldData = $.extend(true, {}, this.data || {});
       this.data = $.extend(true, {}, data);
+    },
+
+    value: function(key, val) {
+      var idx, newData;
+
+      if (key === undefined) {
+
+        // get all
+        return $.extend(true, {}, this.data);
+
+      } else if (typeof key === 'string') {
+
+        // actions by key
+        idx = this.data.label.indexOf(key);
+        if (val === undefined) {
+
+          // get one
+          return idx !== -1 ? this.data.value[idx] : null;
+
+        } else {
+
+          // set one
+          if (idx !== -1) {
+            newData = $.extend(true, {}, this.data);
+            newData.value[idx] = val;
+            this.setData(newData);
+          }
+
+        }
+      } else if (typeof key === 'object') {
+
+        // set all
+        this.setData(key);
+
+      }
+      this.renderChart();
     }
 
   };
@@ -232,9 +268,9 @@
     },
     prepareData: function() {
       this._.oldPieData = this._.pieData;
-      this._.zeroData = zeroFillData(this.data, this._.oldData);
-      this._.total = d3.sum(this._.zeroData.value);
-      this._.pieData = this._.pie(this._.zeroData.value);
+      this.data = fillNewData(this.data, this._.oldData, 0);
+      this._.total = d3.sum(this.data.value);
+      this._.pieData = this._.pie(this.data.value);
     },
     renderChart: function() {
       var self = this;
@@ -242,7 +278,7 @@
       this.prepareData();
       this.$.slices = this.$.chart.selectAll('g')
         .data(this._.pieData, function(d, i){
-          return self._.zeroData.label[i];
+          return self.data.label[i];
         });
 
       this.$.slices.transition()
@@ -260,41 +296,6 @@
         .call(styleText, this.options.label);
 
       enterGroup.call(this._.updateArcGroup);
-    },
-    value: function(key, val) {
-      var idx, newData;
-
-      if (key === undefined) {
-
-        // get all
-        return $.extend(true, {}, this.data);
-
-      } else if (typeof key === 'string') {
-
-        // actions by key
-        var idx = this.data.label.indexOf(key);
-        if (val === undefined) {
-
-          // get one
-          return idx !== -1 ? this.data.value[idx] : null;
-
-        } else {
-
-          // set one
-          if (idx !== -1) {
-            newData = $.extend(true, {}, this.data);
-            newData.value[idx] = val;
-            this.setData(newData);
-          }
-
-        }
-      } else if (typeof key === 'object') {
-
-        // set all
-        this.setData(key);
-
-      }
-      this.renderChart();
     }
   };
 
@@ -381,10 +382,18 @@
 
       this.prepareData();
 
-      this.$.sections = this.$.chart.selectAll('g')
+      this.$.sections = this.$.chart.selectAll('.jqchart-funnel-group')
         .data(this._.trapezoidData);
 
+      this.$.sections.each(function(d, i){
+        d3.select(this).select('.jqchart-funnel-value')
+          .text(function(){
+            return self._.valueFormat(self.data.value[i]);
+          });
+      });
+
       var enterGroup = this.$.sections.enter().append('g')
+        .attr('class', 'jqchart-funnel-group')
         .each(function(d, i){
           var yOffset = self._.scaleY(i);
           d3.select(this).call(translate, 0, yOffset);
@@ -401,15 +410,18 @@
         });
       
       enterLabels.append('text')
+        .attr('class', 'jqchart-funnel-label')
         .text(function(d, i){
           return self.data.label[i];
         }).call(styleText, this.options.label, 'start');
 
       enterLabels.append('text')
+        .attr('class', 'jqchart-funnel-value')
         .attr('y', this.options.axis.fontSize)
         .text(function(d, i){
           return self._.valueFormat(self.data.value[i]);
         }).call(styleText, this.options.axis, 'start');
+
     }
   };
 
@@ -441,8 +453,15 @@
 
       // line builder
       this._.line = d3.svg.line()
-        .x(function(d){ return self._.scaleX(self._.getX(d)); })
-        .y(function(d){ return self._.scaleY(d[1]); });
+        .x(function(d){
+          return self._.scaleX(self._.getX(d));
+        })
+        .y(function(d){
+          return self._.scaleY(d[1]);
+        });
+      this._.lineValue = function(d) {
+        return self._.line(d.value);
+      };
 
       // new line animation
       this._.addLine = function() {
@@ -472,7 +491,7 @@
       };
     },
     // update scale and axis utilities with new domains
-    prepareData: function() {      
+    prepareData: function() {
       this._.scaleX.domain([
         d3.min(this.data.value, this._.minX),
         d3.max(this.data.value, this._.maxX)
@@ -481,20 +500,30 @@
       this._.axisX.scale(this._.scaleX);
       this._.axisY.scale(this._.scaleY);
       this._.updateAxes();
+
+      var self = this;
+      this._.lineData = $.map(this.data.label, function(label, i){
+        return {
+          label: label,
+          value: self.data.value[i]
+        };
+      });
     },
     renderChart: function() {
       // prepare data and scales for rendering
       this.prepareData();
-      
+
       this.$.lines = this.$.chart.selectAll('path')
-        .data(this.data.value);
+        .data(this._.lineData, function(d){
+          return d.label;
+        });
 
       this.$.lines.transition()
         .duration(this.options.animationDuration)
-        .attr('d', this._.line);
+        .attr('d', this._.lineValue);
 
       this.$.lines.enter().append('path')
-        .attr('d', this._.line)
+        .attr('d', this._.lineValue)
         .attr('stroke', this._.color)
         .attr('fill', 'none')
         .attr('stroke-width', this.options.lineWidth)
@@ -503,7 +532,8 @@
       this.$.lines.exit().remove();
     },
     renderData: function() {
-      this.$.lines.attr('d', this._.line);
+      var self = this;
+      this.$.lines.attr('d', this._.lineValue);
     },
     afterRender: function() {
       if (this.options.canZoom) addZoom.call(this);
@@ -566,8 +596,8 @@
       };
     },
     prepareData: function() {
+      // set new scales based on non-zeroed stack data
       this._.stackData = this._.stack(this.data.value);
-
       this._.scaleX.domain([
         d3.min(this.data.value, this._.minX),
         d3.max(this.data.value, this._.maxX)
@@ -576,6 +606,22 @@
         0,
         d3.max(this._.stackData[this._.stackData.length - 1], this._.getY)
       ]);
+
+      // create a flat line to transition exiting areas towards
+      var zeroLine = unique(this.data.value, function(line){
+        return $.map(line, function(tuple){ return tuple[0]; });
+      });
+      zeroLine = $.map(zeroLine, function(x){
+        return [[x, 0]]; // double array, to avoid $.map flattening
+      });
+
+      // zero out old values to persist them for transitioning to zero line
+      this.data = fillNewData(this.data, this._.oldData, function(){
+        return zeroLine; // missing areas replaced with zero line
+      });
+      this._.zeroStack = this._.stack(this.data.value);
+
+      // update axes scales
       this._.axisX.scale(this._.scaleX);
       this._.axisY.scale(this._.scaleY);
       this._.updateAxes();
@@ -588,10 +634,13 @@
         .data(this._.stack(this.data.value));
 
       this.$.areas.enter().append('path')
-        .attr('d', this._.area)
+        // .attr('d', this._.area)
         .attr('fill', this._.color);
 
-      this.$.areas.attr('d', this._.area);
+      this.$.areas.transition()
+        .duration(this.options.animationDuration)
+          .attr('d', this._.area);
+
       this.$.areas.exit().remove();    
     },
     renderData: function() {
@@ -705,7 +754,7 @@
 
         section.exit().remove();
       };
-      this._.updateSection = function(section, isNew) {
+      this._.updateSection = function() {
         this.transition()
           .duration(self._.hasRendered ? self.options.animationDuration : self.options.animationDuration / 2)
           .delay(function(d){
@@ -772,40 +821,6 @@
     afterRender: function() {
       this._.hasRendered = true;
       if (this.options.canZoom) addZoom.call(this);
-    },
-    value: function(key, val) {
-      if (key === undefined) {
-
-        // get all
-        return $.extend(true, {}, this.data);
-
-      } else if (typeof key === 'string') {
-
-        // actions by key
-        var idx = this.data.label.indexOf(key);
-        if (val === undefined) {
-
-          // get one
-          return idx !== -1 ? this.data.value[idx] : null;
-
-        } else {
-
-          // set one
-          if (idx !== -1) {
-            this._.oldData = $.extend(true, {}, this.data);
-            this.data.value[idx] = val;
-            this.setData(this.data);
-          }
-
-        }
-      } else if (typeof key === 'object') {
-
-        // set all
-        this._.oldData = $.extend(true, {}, this.data);
-        this.setData(key);
-
-      }
-      this.renderChart();
     }
   };
   
@@ -813,7 +828,7 @@
   // 
   // shared chart drawing functions
   // 
-  
+
   // shared canvas initialization that creates a frame with axes and labels
   function framedInit() {
     // build target for chart
@@ -1052,19 +1067,47 @@
   var colorScale = d3.scale.category20();
   function rawX(d) { return d[0]; }
   function rawY(d) { return d[1]; }
-  function zeroFillData(newData, oldData) {
+  // Resolve the first argument to a value.
+  // For functions, execute the function with all arguments in array
+  // `args` and the context (this) of `context`
+  // For everything else, return the value.
+  function resolve(val, args, context) {
+    if (typeof val === 'function') {
+      return val.apply(context, args);
+    } else{
+      return val;
+    }
+  }
+  // Fill exiting labels with the value provided in fillValue
+  // fillValue can be a flat value or a function, passed args: oldValue, index
+  function fillNewData(newData, oldData, fillValue) {
     var i, I;
-    
-    if (!oldData.label) return newData;
+    var tgtData = $.extend(true, {}, newData);
+
+    if (!oldData.label) return tgtData;
     for (i=0, I=oldData.label.length; i<I; i++) {
       // value is labelled and missing from new data
-      if (oldData.label[i] && newData.label.indexOf(oldData.label[i]) === -1) {
-        newData.label.splice(i, 0, oldData.label[i]);
-        newData.value.splice(i, 0, 0);
+      if (oldData.label[i] && tgtData.label.indexOf(oldData.label[i]) === -1) {
+        tgtData.label.splice(i, 0, oldData.label[i]);
+        tgtData.value.splice(i, 0, resolve(fillValue, [oldData.value[i], i], tgtData));
       }
     }
     
-    return newData;
+    return tgtData;
+  }
+  // Get the unique values within an array.  Getter can be a mapping function
+  // to extract values from the source array.
+  function unique(array, getter) {
+    var results = [];
+    if (typeof getter === 'function') {
+      array = $.map(array, getter);
+    }
+    $.each(array, function(index, value){
+      if (results.indexOf(value) === -1) {
+        results.push(value);
+      }
+    });
+    return results;
   }
   
 }(this, jQuery));
