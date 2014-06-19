@@ -162,7 +162,8 @@
     startAngle: 0,
     strokeWidth: 0.7,
     strokeColor: '#FFFFFF',
-    innerRadius: 0
+    innerRadius: 0,
+    numberFormat: '.2p'
   };
   plugin.types.pie = {
     init: function pieInit() {
@@ -180,6 +181,7 @@
       this._.outerRadius = Math.min(this._.width/2 - (this.options.label.fontSize * 2), this._.height/2) - this.options.label.margin - this.options.label.fontSize;
       this._.labelRadius = this._.outerRadius + this.options.label.margin;
       this._.startAngle = this.options.startAngle * Math.PI / 180;
+      this._.numberFormat = d3.format(this.options.numberFormat);
 
       // arc builder
       this._.arc = d3.svg.arc()
@@ -220,7 +222,7 @@
           .tween('arcsize', self._.tweenArcSize)
           .each('end', function(){
             d3.select(this).select('text').text(function(d){
-              return d.value === 0 ? '' : toPercent(d.value / self._.total);
+              return d.value === 0 ? '' : self._.numberFormat(d.value / self._.total);
             });
           });
       };
@@ -349,7 +351,7 @@
         return output;
       };
 
-      this._.valueFormat = d3.format(this.options.numberFormat);
+      this._.numberFormat = d3.format(this.options.numberFormat);
 
       this._.color = function(d, i) {
         if (self.data.color && self.data.color instanceof Array && self.data.color[i]) {
@@ -388,7 +390,7 @@
       this.$.sections.each(function(d, i){
         d3.select(this).select('.jqchart-funnel-value')
           .text(function(){
-            return self._.valueFormat(self.data.value[i]);
+            return self._.numberFormat(self.data.value[i]);
           });
       });
 
@@ -419,7 +421,7 @@
         .attr('class', 'jqchart-funnel-value')
         .attr('y', this.options.axis.fontSize)
         .text(function(d, i){
-          return self._.valueFormat(self.data.value[i]);
+          return self._.numberFormat(self.data.value[i]);
         }).call(styleText, this.options.axis, 'start');
 
     }
@@ -946,6 +948,9 @@
         return self._.parseDate(d[0]);
       };
     } else {
+      if (!this._.numberFormat) {
+        this._.numberFormat = d3.format(this.options.numberFormat);
+      }
       this._.getX = this._.getX || rawX;
     }
     this._.minX = this._.minX || function(d){ return d3.min(d, self._.getX); };
@@ -958,6 +963,8 @@
       .ticks(5);
     if (this.options.parseDate) {
       this._.axisX.tickFormat(d3.time.format(this.options.axis.xFormat || '%-m/%-d'));
+    } else {
+      this._.axisX.tickFormat(this._.numberFormat);
     }
     if (this.options.xGrid) {
       this._.axisX.tickSize(-this._.height);
@@ -970,12 +977,16 @@
 
     this._.getY = this._.getY || rawY;
     this._.maxY = this._.maxY || function(d){ return d3.max(d, self._.getY); };
-    
+    if (!this._.numberFormat) {
+      this._.numberFormat = d3.format(this.options.numberFormat);
+    }
+
     this._.scaleY = d3.scale.linear()
       .rangeRound([this._.height, this.options.frame.paddingTop]);
     this._.axisY = d3.svg.axis().orient('left')
       .tickPadding(4)
-      .ticks(6);
+      .ticks(6)
+      .tickFormat(this._.numberFormat);
     if (this.options.yGrid) this._.axisY.tickSize(-this._.width);
   }
 

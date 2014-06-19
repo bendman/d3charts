@@ -41,155 +41,43 @@
 </head>
 <body>
 	
-	<!-- <div id="t1" class="target"></div> -->
-	<!-- <div id="t2" class="target"></div> -->
-	<!-- <div id="t3" class="target"></div> -->
+	<div id="t1" class="target"></div>
+	<div id="t2" class="target"></div>
+	<div id="t3" class="target"></div>
 	<div id="t4" class="target"></div>
+	<div id="t5" class="target"></div>
 
 	<script src="data-structures.js"></script>
 	<script src="d3.jqcharts.js"></script>
 
 	<script type="text/javascript">
-	$.fn.jqChart.options.global.animationDuration = 1500;
-	$(function(){
-		var data1 = data.pie;
-		var data2 = data.pie2;
-		var label = data1.label[1];
-		var offset = 2000;
-		var timer = 0;
-		var chart = $('#t1').jqChart('pie', data1);
+	$(pie);
+	$(bar);
+	$(line);
+	$(area);
+	$(funnel);
 
-		// console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-		// console.log('get one', !(chart.jqChart('value', 'Message 1') instanceof $), chart.jqChart('value', label));
+	var options = {};
 
-		window.setTimeout(function(){
-			chart.jqChart('value', data2);
-		}, timer += offset);
-		window.setTimeout(function(){
-			chart.jqChart('value', label, data1.value[1]);
-		}, timer += offset);
-		window.setTimeout(function(){
-			chart.jqChart('value', data1);
-		}, timer += offset);
-	});
-	$(function(){
-		var data1 = data.barStacked;
-		var data2 = data.barStacked2;
-		var label = data1.label[1];
-		var offset = 2000;
-		var timer = 0;
-		var chart = $('#t2').jqChart('bar', data1);
-		window.chart = chart;
+	function pie() {
+		$('#t1').jqChart('pie', data.pie);
+	}
 
-		// console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-		// console.log('get one', !(chart.jqChart('value', data1.label[0]) instanceof $), chart.jqChart('value', label));
+	function bar() {
+		$('#t2').jqChart('bar', data.bar, options);
+	}
 
-		window.setTimeout(function(){
-			chart.jqChart('value', data2);
-		}, timer += offset);
-		window.setTimeout(function(){
-			chart.jqChart('value', label, data1.value[1]);
-		}, timer += offset);
-		window.setTimeout(function(){
-			chart.jqChart('value', data1);
-		}, timer += offset);
-	});
-	$(function(){
-		// var data1 = data.line;
-		// var data2 = data.line2;
-		// var label = data1.label;
-		// var offset = 2000;
-		// var timer = 0;
-		// var chart = $('#t3').jqChart('line', data1);
-		// window.chart = chart;
+	function line() {
+		$('#t3').jqChart('line', data.line, options);
+	}
 
-		// // console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-		// // console.log('get one', !(chart.jqChart('value', data1.label[0]) instanceof $), chart.jqChart('value', label));
+	function area() {
+		$('#t4').jqChart('area', data.line, options);
+	}
+	function funnel() {
+		$('#t5').jqChart('funnel', data.funnel, options);
+	}
 
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', data2);
-		// }, timer += offset);
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', label[0], data1.value[1]);
-		// }, timer += offset);
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', data1);
-		// }, timer += offset);
-	});
-
-	// $(function(){
-	// 	var data1 = data.line;
-	// 	var data2 = data.line2;
-	// 	var label = data1.label;
-	// 	var offset = 2000;
-	// 	var timer = 0;
-	// 	var chart = $('#t4').jqChart('area', data1);
-	// 	window.chart = chart;
-
-	// 	// console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-	// 	// console.log('get one', !(chart.jqChart('value', data1.label[0]) instanceof $), chart.jqChart('value', label));
-
-	// 	window.setTimeout(function(){
-	// 		chart.jqChart('value', data2);
-	// 	}, timer += offset);
-	// 	window.setTimeout(function(){
-	// 		chart.jqChart('value', label[0], data1.value[1]);
-	// 	}, timer += offset);
-	// 	window.setTimeout(function(){
-	// 		chart.jqChart('value', data1);
-	// 	}, timer += offset);
-	// });
-	// 
-	// 
-	$(function(){
-		var data1 = data.funnel;
-		// var data2 = data.line2;
-		// var label = data1.label;
-		var offset = 2000;
-		var timer = 0;
-		var chart = $('#t4').jqChart('funnel', data1);
-		window.chart = chart;
-
-		// console.log('get all', !(chart.jqChart('value') instanceof $), chart.jqChart('value'));
-		// console.log('get one', !(chart.jqChart('value', data1.label[0]) instanceof $), chart.jqChart('value', label));
-
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', data2);
-		// }, timer += offset);
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', label[0], data1.value[1]);
-		// }, timer += offset);
-		// window.setTimeout(function(){
-		// 	chart.jqChart('value', data1);
-		// }, timer += offset);
-	});
-	
-
-		// $('#t1').jqChart('bar', data.bar, {
-		// 	frame: {
-		// 		borderColor: 'red'
-		// 	}
-		// });
-		// $('#t2').jqChart('area', data.line, {
-		// 	label: {
-		// 		x: 'x label',
-		// 		y: 'y label'
-		// 	}
-		// });
-		// $('#t3').jqChart('funnel', data.funnel, {
-		// 	axis: {
-		// 		fontColor: '#149195',
-		// 		fontSize: 20
-		// 	}
-		// });
-		// $('#t4').jqChart('area', data.area, {
-		// 	xLabel: 'Date',
-		// 	yLabel: 'Campaign Members',
-		// 	parseDate: '%m/%d/%Y',
-		// 	axis: {
-		// 		xFormat: '%-m/%-d'
-		// 	}
-		// });
 	</script>
 
 </body>
