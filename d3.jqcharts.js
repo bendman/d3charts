@@ -958,7 +958,7 @@
     this._.minX = this._.minX || function(d){ return d3.min(d, self._.getX); };
     this._.maxX = this._.maxX || function(d){ return d3.max(d, self._.getX); };
 
-    this._.scaleX = this.options.dateParse ? d3.time.scale() : d3.scale.linear();
+    this._.scaleX = this.options.xDate ? d3.time.scale() : d3.scale.linear();
     this._.scaleX.range([0, this._.width]);
     this._.axisX = d3.svg.axis().orient('bottom')
       .tickPadding(hasSVG ? 6 : 10)
