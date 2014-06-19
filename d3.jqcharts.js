@@ -496,6 +496,13 @@
     },
     // update scale and axis utilities with new domains
     prepareData: function() {
+      var self = this;
+      
+      // sort line points by x values
+      $.each(this.data.value, function(i, points){
+        arraySort(points, self._.getX);
+      });
+
       this._.scaleX.domain([
         d3.min(this.data.value, this._.minX),
         d3.max(this.data.value, this._.maxX)
@@ -505,7 +512,6 @@
       this._.axisY.scale(this._.scaleY);
       this._.updateAxes();
 
-      var self = this;
       this._.lineData = $.map(this.data.label, function(label, i){
         return {
           label: label,
@@ -600,6 +606,14 @@
       };
     },
     prepareData: function() {
+      var self = this;
+
+      // sort line points by x values
+      $.each(this.data.value, function(i, points){
+        arraySort(points, self._.getX);
+      });
+
+
       // set new scales based on non-zeroed stack data
       this._.stackData = this._.stack(this.data.value);
       this._.scaleX.domain([
@@ -1056,18 +1070,23 @@
         .call(translate, 0, 1);
     this.$.chart.attr('clip-path', 'url(#clip-path-' + clipPaths + ')');
   }
-
-  //
-  // utility functions
-  //
   
+  // 
   // SVG helpers
+  // 
+  
+  // offset a number by 0.5 to align borders with screen pixels
+  // https://groups.google.com/forum/#!topic/d3-js/q1LXpR47xqU
   function cleanPx(px) { return Math.ceil(px) - 0.5; }
+
+  // translate a selection by x/y properties
   function translate(element, x, y) {
-    // array overload
+    // overloaded, in case x,y is passed as [x,y] by d3
     if (x instanceof Array) { y = x[1]; x = x[0]; }
     element.attr('transform', 'translate('+x+','+y+')');
   }
+
+  // style a text selection based on text options object
   function styleText(label, options, anchor) {
     label.attr('text-anchor', anchor || 'middle')
       .style('font-family', options.fontFamily)
@@ -1075,22 +1094,13 @@
       .attr('fill', options.fontColor);
   }
 
-  // data helpers
-  var toPercent = d3.format('.2p');
+  // 
+  // Data helpers
+  // 
   var colorScale = d3.scale.category20();
   function rawX(d) { return d[0]; }
   function rawY(d) { return d[1]; }
-  // Resolve the first argument to a value.
-  // For functions, execute the function with all arguments in array
-  // `args` and the context (this) of `context`
-  // For everything else, return the value.
-  function resolve(val, args, context) {
-    if (typeof val === 'function') {
-      return val.apply(context, args);
-    } else{
-      return val;
-    }
-  }
+
   // Fill exiting labels with the value provided in fillValue
   // fillValue can be a flat value or a function, passed args: oldValue, index
   function fillNewData(newData, oldData, fillValue) {
@@ -1108,6 +1118,32 @@
     
     return tgtData;
   }
+
+  // sort an array of tuples by their x value
+  function arraySort(array, getter) {
+    if (getter === undefined) getter = rawX;
+    array.sort(function(a, b){
+      return getter(a) < getter(b) ? -1 : 1;
+    });
+  }
+
+
+  // 
+  // Utility helpers
+  //
+
+  // Resolve the first argument to a value.
+  // For functions, execute the function with all arguments in array
+  // `args` and the context (this) of `context`
+  // For everything else, return the value.
+  function resolve(val, args, context) {
+    if (typeof val === 'function') {
+      return val.apply(context, args);
+    } else {
+      return val;
+    }
+  }
+
   // Get the unique values within an array.  Getter can be a mapping function
   // to extract values from the source array.
   function unique(array, getter) {
