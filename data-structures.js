@@ -207,6 +207,6 @@ data.area = {
 		['6/29/2014', 24236],
 		['6/30/2014', 23572]
 	]],
-	label: ['Engaged', 'Not Engaged'],
+	label: ['Engaged', 'Not Engaged', 'Other'],
 	color: ['#DC4740', '#E3A1A3', '#159097']
 };

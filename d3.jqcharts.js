@@ -61,7 +61,10 @@
     xGrid: true,
     yGrid: true,
     canZoom: true,
-    numberFormat: ','
+    numberFormat: ',',
+    dateFormat: '%-m/%-d',
+    dateParse: '%m/%d/%Y',
+    xDate: false
   };
   
   
@@ -438,8 +441,7 @@
     label: {
       x: null,
       y: null
-    },
-    parseDate: null
+    }
   };
   plugin.types.line = {
     init: framedInit,
@@ -942,10 +944,10 @@
   function xFrameUtils() {
     var self = this;
 
-    if (this.options.parseDate) {
-      this._.parseDate = d3.time.format(this.options.parseDate).parse;
+    if (this.options.xDate) {
+      this._.dateParse = d3.time.format(this.options.dateParse).parse;
       this._.getX = function(d) {
-        return self._.parseDate(d[0]);
+        return self._.dateParse(d[0]);
       };
     } else {
       if (!this._.numberFormat) {
@@ -956,13 +958,13 @@
     this._.minX = this._.minX || function(d){ return d3.min(d, self._.getX); };
     this._.maxX = this._.maxX || function(d){ return d3.max(d, self._.getX); };
 
-    this._.scaleX = this.options.parseDate ? d3.time.scale() : d3.scale.linear();
+    this._.scaleX = this.options.dateParse ? d3.time.scale() : d3.scale.linear();
     this._.scaleX.range([0, this._.width]);
     this._.axisX = d3.svg.axis().orient('bottom')
       .tickPadding(hasSVG ? 6 : 10)
       .ticks(5);
-    if (this.options.parseDate) {
-      this._.axisX.tickFormat(d3.time.format(this.options.axis.xFormat || '%-m/%-d'));
+    if (this.options.xDate) {
+      this._.axisX.tickFormat(d3.time.format(this.options.dateFormat));
     } else {
       this._.axisX.tickFormat(this._.numberFormat);
     }

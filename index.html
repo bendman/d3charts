@@ -72,7 +72,9 @@
 	}
 
 	function area() {
-		$('#t4').jqChart('area', data.line, options);
+		$('#t4').jqChart('area', data.area, {
+			xDate: true
+		});
 	}
 	function funnel() {
 		$('#t5').jqChart('funnel', data.funnel, options);
