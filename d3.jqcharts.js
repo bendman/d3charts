@@ -429,7 +429,7 @@
 
       enterLabels.append('text')
         .attr('class', 'jqchart-funnel-value')
-        .attr('y', this.options.axis.fontSize)
+        .attr('y', this.options.axis.fontSize * 1.3)
         .text(function(d, i){
           var text = self._.numberFormat(self.data.value[i]);
           if (self.data.value[i-1] !== undefined) {
