@@ -36,16 +36,16 @@
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<!--[if lte IE 8]><script src="//cdnjs.cloudflare.com/ajax/libs/r2d3/0.2.0/r2d3.min.js"></script><![endif]-->
 	<!--[if gte IE 9]><!-->
-		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.5/d3.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.8/d3.min.js"></script>
 	<!--<![endif]-->
 </head>
 <body>
 	
-	<!-- <div id="t1" class="target"></div> -->
-	<!-- <div id="t2" class="target"></div> -->
+	<div id="t1" class="target"></div>
+	<div id="t2" class="target"></div>
 	<div id="t3" class="target"></div>
 	<div id="t4" class="target"></div>
-	<!-- <div id="t5" class="target"></div> -->
+	<div id="t5" class="target"></div>
 
 	<script src="data-structures.js"></script>
 	<script src="d3.jqcharts.js"></script>
@@ -57,27 +57,44 @@
 	$(area);
 	$(funnel);
 
-	var options = {};
+	var defaults = {
+		axis: {
+			xAxisMargin: 4,
+			yAxisMargin: 4
+		},
+		label: {
+			x: 'X Label',
+			y: 'Y Label'
+		}
+	};
+
+	$.extend(true, $.fn.jqChart.options.global, defaults);
 
 	function pie() {
 		$('#t1').jqChart('pie', data.pie);
 	}
 
 	function bar() {
-		$('#t2').jqChart('bar', data.bar, options);
+		$('#t2').jqChart('bar', data.bar, {
+			axis: {
+				yAxisSpace: 20
+			}
+		});
 	}
 
 	function line() {
-		$('#t3').jqChart('line', data.line, options);
+		$('#t3').jqChart('line', data.line, {
+			axis: {yAxisSpace: 20}
+		});
 	}
 
 	function area() {
-		$('#t4').jqChart('line', data.area, {
+		$('#t4').jqChart('area', data.area, {
 			xDate: true
 		});
 	}
 	function funnel() {
-		$('#t5').jqChart('funnel', data.funnel, options);
+		$('#t5').jqChart('funnel', data.funnel);
 	}
 
 	</script>

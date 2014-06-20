@@ -45,13 +45,19 @@
       fontFamily: 'Verdana',
       fontSize: 14,
       margin: 10,
-      fontColor: '#000'
+      fontColor: '#000',
+      x: null,
+      y: null
     },
     axis: {
       fontFamily: 'Verdana',
       fontSize: 12,
       fontColor: '#aaa',
-      gridColor: '#e2e2e2'
+      gridColor: '#e2e2e2',
+      xAxisMargin: 0,
+      yAxisMargin: 0,
+      xAxisSpace: null,
+      yAxisSpace: null
     },
     frame: {
       backgroundColor: '#fff',
@@ -87,13 +93,13 @@
     // build SVG element to contain chart
     this.autoSize();
     this.addSVG();
+    this.setData(data);
 
     // build chart element and any externals (legend, label, axis)
     this.init();
 
     // render first iteration of chart
     this.prepareUtils();
-    this.setData(data);
     this.renderChart();
     if (this.afterRender) this.afterRender();
   }
@@ -927,14 +933,17 @@
     var self = this;
     var descenderSize = Math.ceil(this.options.axis.fontSize / 3);
 
-    this._.marginBottom += this.options.axis.fontSize + descenderSize;
+    var xAxisSpace = typeof this.options.axis.xAxisSpace === 'number' ? this.options.axis.xAxisSpace : this.options.axis.fontSize + descenderSize;
+    var yAxisSpace = typeof this.options.axis.yAxisSpace === 'number' ? this.options.axis.yAxisSpace : this.options.axis.fontSize * 4;
+
+    this._.marginBottom += xAxisSpace + this.options.axis.xAxisMargin;
     this._.marginTop += this.options.axis.fontSize;
     this.$.axisX = this.$.frame.append('g')
       .attr('class', 'jqchart-axis-x jqchart-axis')
       .call(translate, 0, this._.height - this._.marginTop - this._.marginBottom);
 
     this._.marginRight += this.options.axis.fontSize * 2;
-    this._.marginLeft += this.options.axis.fontSize * 4;
+    this._.marginLeft += yAxisSpace + this.options.axis.yAxisMargin;
     this.$.axisY = this.$.frame.append('g')
       .attr('class', 'jqchart-axis-y jqchart-axis')
       .call(translate, 0, 0);
@@ -951,8 +960,16 @@
     };
 
     this._.updateAxes = function() {
-      if (self.$.axisX) self.$.axisX.call(self._.axisX).call(self._.styleAxis);
-      if (self.$.axisY) self.$.axisY.call(self._.axisY).call(self._.styleAxis);
+      if (self.$.axisX) {
+        self.$.axisX.call(self._.axisX).call(self._.styleAxis)
+          .selectAll('text')
+            .call(translate, 0, self.options.axis.xAxisMargin);
+      }
+      if (self.$.axisY) {
+        self.$.axisY.call(self._.axisY).call(self._.styleAxis)
+          .selectAll('text')
+            .call(translate, -self.options.axis.yAxisMargin, 0);
+      }
     };
   }
   function xFrameUtils() {
