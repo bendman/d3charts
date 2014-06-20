@@ -56,8 +56,8 @@
       gridColor: '#e2e2e2',
       xAxisMargin: 0,
       yAxisMargin: 0,
-      xAxisSpace: null,
-      yAxisSpace: null
+      xAxisSpace: 'auto',
+      yAxisSpace: 'auto'
     },
     frame: {
       backgroundColor: '#fff',
@@ -67,6 +67,7 @@
     xGrid: true,
     yGrid: true,
     canZoom: true,
+    percentFormat: '.2p',
     numberFormat: ',',
     dateFormat: '%-m/%-d',
     dateParse: '%m/%d/%Y',
@@ -171,8 +172,7 @@
     startAngle: 0,
     strokeWidth: 0.7,
     strokeColor: '#FFFFFF',
-    innerRadius: 0,
-    numberFormat: '.2p'
+    innerRadius: 0
   };
   plugin.types.pie = {
     init: function pieInit() {
@@ -190,7 +190,7 @@
       this._.outerRadius = Math.min(this._.width/2 - (this.options.label.fontSize * 2), this._.height/2) - this.options.label.margin - this.options.label.fontSize;
       this._.labelRadius = this._.outerRadius + this.options.label.margin;
       this._.startAngle = this.options.startAngle * Math.PI / 180;
-      this._.numberFormat = d3.format(this.options.numberFormat);
+      this._.percentFormat = d3.format(this.options.percentFormat);
 
       // arc builder
       this._.arc = d3.svg.arc()
@@ -231,7 +231,7 @@
           .tween('arcsize', self._.tweenArcSize)
           .each('end', function(){
             d3.select(this).select('text').text(function(d){
-              return d.value === 0 ? '' : self._.numberFormat(d.value / self._.total);
+              return d.value === 0 ? '' : self._.percentFormat(d.value / self._.total);
             });
           });
       };
@@ -361,6 +361,7 @@
       };
 
       this._.numberFormat = d3.format(this.options.numberFormat);
+      this._.percentFormat = d3.format(this.options.percentFormat);
 
       this._.color = function(d, i) {
         if (self.data.color && self.data.color instanceof Array && self.data.color[i]) {
@@ -430,7 +431,11 @@
         .attr('class', 'jqchart-funnel-value')
         .attr('y', this.options.axis.fontSize)
         .text(function(d, i){
-          return self._.numberFormat(self.data.value[i]);
+          var text = self._.numberFormat(self.data.value[i]);
+          if (self.data.value[i-1] !== undefined) {
+            text += ' (' + self._.percentFormat(self.data.value[i] / self.data.value[i-1]) + ')';
+          }
+          return text;
         }).call(styleText, this.options.axis, 'start');
 
     }
