@@ -307,6 +307,14 @@
         .call(styleText, this.options.label);
 
       enterGroup.call(this._.updateArcGroup);
+
+      this.$.slices.selectAll('path').on('click', function(d, a, i){
+        triggerEvent('click:section', self, {
+          value: d.value,
+          percent: d.value / self._.total * 100,
+          label: self.data.label[i],
+        });
+      });
     }
   };
 
@@ -553,7 +561,6 @@
       this.$.lines.exit().remove();
     },
     renderData: function() {
-      var self = this;
       this.$.lines.attr('d', this._.lineValue);
     },
     afterRender: function() {
@@ -1112,8 +1119,13 @@
   function styleText(label, options, anchor) {
     label.attr('text-anchor', anchor || 'middle')
       .style('font-family', options.fontFamily)
-      .style('font-size', options.fontSize)
+      .style('font-size', options.fontSize + 'px')
       .attr('fill', options.fontColor);
+  }
+
+  // trigger a jquery event on the chart
+  function triggerEvent(type, chart, value) {
+    chart.$el.trigger(type, [value, new $.Event(d3.event)]);
   }
 
   // 
