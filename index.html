@@ -35,39 +35,42 @@
 	<script type="text/javascript">
 	$(pie);
 	$(bar);
-	$(line);
 	$(area);
 	$(funnel);
+	window.setTimeout(line, 1000);
 
-	var defaults = {
-		axis: {
-			xAxisMargin: 4,
-			yAxisMargin: 4
-		},
-		label: {
-			x: 'X Label',
-			y: 'Y Label'
-		}
-	};
+	// var defaults = {
+	// 	axis: {
+	// 		xAxisMargin: 4,
+	// 		yAxisMargin: 4
+	// 	}/*,
+	// 	label: {
+	// 		x: 'X Label',
+	// 		y: 'Y Label'
+	// 	}*/
+	// };
 
-	$.extend(true, $.fn.jqChart.options.global, defaults);
+	// $.extend(true, $.fn.jqChart.options.global, defaults);
 
+	$(document).on('click:data', function(e, data){
+		console.log('clicked', data);
+	});
 	function pie() {
 		$('#t1').jqChart('pie', data.pie);
 	}
 
 	function bar() {
-		$('#t2').jqChart('bar', data.bar, {
+		$('#t2').jqChart('bar', data.barStacked/*, {
 			axis: {
 				yAxisSpace: 20
 			}
-		});
+		}*/);
 	}
 
 	function line() {
-		$('#t3').jqChart('line', data.line, {
+		$('#t3').jqChart('line', data.line /*, {
 			axis: {yAxisSpace: 20}
-		});
+		} */);
 	}
 
 	function area() {

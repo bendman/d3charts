@@ -34,7 +34,7 @@
       return result.length > 1 ? result.toArray() : result[0];
     }
   };
-  
+
   // expose default options
   plugin.options = {};
   plugin.options.global = {
@@ -73,11 +73,11 @@
     dateParse: '%m/%d/%Y',
     xDate: false
   };
-  
-  
-  // 
+
+
+  //
   // global chart constructor, extends itself by type
-  // 
+  //
   function Chart(element, type, data, options) {
     if (!plugin.types[type]) return null;
 
@@ -161,13 +161,13 @@
     }
 
   };
-  
+
   // dictionary of chart types
   plugin.types = {};
-  
-  // 
+
+  //
   // pie charts
-  // 
+  //
   plugin.options.pie = {
     startAngle: 0,
     strokeWidth: 0.7,
@@ -225,7 +225,7 @@
       };
 
       // arc repositioning animation
-      this._.updateArcGroup = function() {
+      this._.updateSection = function() {
         this.transition()
           .duration(self.options.animationDuration)
           .tween('arcsize', self._.tweenArcSize)
@@ -287,15 +287,15 @@
       var self = this;
 
       this.prepareData();
-      this.$.slices = this.$.chart.selectAll('g')
+      this.$.sections = this.$.chart.selectAll('g')
         .data(this._.pieData, function(d, i){
           return self.data.label[i];
         });
 
-      this.$.slices.transition()
-        .call(this._.updateArcGroup);
+      this.$.sections.transition()
+        .call(this._.updateSection);
 
-      var enterGroup = this.$.slices.enter().append('g');
+      var enterGroup = this.$.sections.enter().append('g');
 
       enterGroup.append('path')
         .attr('fill', this._.color)
@@ -306,21 +306,22 @@
         .attr('text-anchor', 'middle')
         .call(styleText, this.options.label);
 
-      enterGroup.call(this._.updateArcGroup);
+      enterGroup.call(this._.updateSection);
 
-      this.$.slices.selectAll('path').on('click', function(d, a, i){
-        triggerEvent('click:section', self, {
+      this.$.sections.selectAll('path').on('click', function(d, a, i){
+        triggerEvent('click:data', self, {
+          section: i,
           value: d.value,
           percent: d.value / self._.total * 100,
-          label: self.data.label[i],
+          label: self.data.label[i]
         });
       });
     }
   };
 
-  // 
+  //
   // funnel charts
-  // 
+  //
   plugin.options.funnel = {
     label: {
       width: 150
@@ -428,7 +429,7 @@
           var xOffset = self._.scaleX(-i) + (self._.width / 2) + self.options.label.margin;
           d3.select(this).call(translate, xOffset, (self._.height / self.data.value.length) / 2);
         });
-      
+
       enterLabels.append('text')
         .attr('class', 'jqchart-funnel-label')
         .text(function(d, i){
@@ -446,12 +447,20 @@
           return text;
         }).call(styleText, this.options.axis, 'start');
 
+      this.$.sections.selectAll('path').on('click', function(d, a, i){
+        triggerEvent('click:data', self, {
+          section: i,
+          value: self.data.value[i],
+          label: self.data.label[i]
+        });
+      });
+
     }
   };
 
-  // 
+  //
   // line charts
-  // 
+  //
   plugin.options.line = {
     lineWidth: 3,
     axis: {
@@ -516,7 +525,7 @@
     // update scale and axis utilities with new domains
     prepareData: function() {
       var self = this;
-      
+
       // sort line points by x values
       $.each(this.data.value, function(i, points){
         arraySort(points, self._.getX);
@@ -539,38 +548,48 @@
       });
     },
     renderChart: function() {
+      var self = this;
       // prepare data and scales for rendering
       this.prepareData();
 
-      this.$.lines = this.$.chart.selectAll('path')
+      this.$.sections = this.$.chart.selectAll('path')
         .data(this._.lineData, function(d){
           return d.label;
         });
 
-      this.$.lines.transition()
+      this.$.sections.transition()
         .duration(this.options.animationDuration)
         .attr('d', this._.lineValue);
 
-      this.$.lines.enter().append('path')
+      this.$.sections.enter().append('path')
         .attr('d', this._.lineValue)
         .attr('stroke', this._.color)
         .attr('fill', 'none')
-        .attr('stroke-width', this.options.lineWidth)
+        .attr('stroke-width', '' + this.options.lineWidth)
         .each(this._.addLine);
 
-      this.$.lines.exit().remove();
+      this.$.sections.on('click', function(d, a, i){
+        triggerEvent('click:data', self, {
+          section: i,
+          value: d.value,
+          label: self.data.label[i]
+        });
+      });
+
+      this.$.sections.exit().remove();
     },
     renderData: function() {
-      this.$.lines.attr('d', this._.lineValue);
+      this.$.sections.attr('d', this._.lineValue);
     },
     afterRender: function() {
-      if (this.options.canZoom) addZoom.call(this);
+      // REMOVED WHILE CONFLICTING WITH EVENTS
+      // if (this.options.canZoom) addZoom.call(this);
     }
   };
-  
-  // 
+
+  //
   // area charts
-  // 
+  //
   plugin.options.area = {
     axis: {
       gridAbove: true
@@ -578,8 +597,8 @@
   };
   plugin.types.area = {
     _: {
-      getY: function(d) { 
-        return d.y0 + d.y; 
+      getY: function(d) {
+        return d.y0 + d.y;
       }
     },
     init: framedInit,
@@ -631,7 +650,6 @@
         arraySort(points, self._.getX);
       });
 
-
       // set new scales based on non-zeroed stack data
       this._.stackData = this._.stack(this.data.value);
       this._.scaleX.domain([
@@ -663,33 +681,47 @@
       this._.updateAxes();
     },
     renderChart: function() {
+      var self = this;
+
       // prepare data and scales for rendering
       this.prepareData();
 
-      this.$.areas = this.$.chart.selectAll('path')
+      this.$.sections = this.$.chart.selectAll('path')
         .data(this._.stack(this.data.value));
 
-      this.$.areas.enter().append('path')
-        // .attr('d', this._.area)
+      this.$.sections.enter().append('path')
         .attr('fill', this._.color);
 
-      this.$.areas.transition()
+      this.$.sections.transition()
         .duration(this.options.animationDuration)
           .attr('d', this._.area);
 
-      this.$.areas.exit().remove();    
+      this.$.sections.exit().remove();
+
+      this.$.sections.on('click', function(d, i){
+        console.log('clicked on number', d, i);
+        triggerEvent('click:data', self, {
+          section: i,
+          value: $.map(self.data.value[i], function(eachValue){
+            return [eachValue.slice()];
+          }),
+          label: self.data.label[i]
+        });
+      });
+
     },
     renderData: function() {
-      this.$.areas.attr('d', this._.area);
+      this.$.sections.attr('d', this._.area);
     },
     afterRender: function() {
-      if (this.options.canZoom) addZoom.call(this);
+      // REMOVED WHILE CONFLICTING WITH EVENTS
+      // if (this.options.canZoom) addZoom.call(this);
     }
   };
-  
-  // 
+
+  //
   // bar charts
-  // 
+  //
   plugin.options.bar = {
     axis: {
       barSpacing: 0.3,
@@ -765,7 +797,7 @@
       };
 
       // bar update transition
-      this._.updateBar = function(barData) {
+      this._.updateSection = function(barData) {
         d3.select(this).transition()
           .duration(self.options.animationDuration)
             .attr('transform', function(d){
@@ -775,7 +807,7 @@
         var section = d3.select(this).selectAll('rect')
           .data(barData);
 
-        section.call(self._.updateSection);
+        section.call(self._.updateSubsection);
 
         section.enter().append('rect')
           .attr('fill', function(d){ return d.color; })
@@ -784,13 +816,13 @@
           .attr('width', function(){
             return self._.scaleX.rangeBand();
           })
-          .call(self._.updateSection, true);
+          .call(self._.updateSubsection, true);
 
-        section.call(self._.updateSection);
+        section.call(self._.updateSubsection);
 
         section.exit().remove();
       };
-      this._.updateSection = function() {
+      this._.updateSubsection = function() {
         this.transition()
           .duration(self._.hasRendered ? self.options.animationDuration : self.options.animationDuration / 2)
           .delay(function(d){
@@ -821,20 +853,29 @@
 
       var oldBandWidth = this._.scaleX.rangeBand();
 
-      // prepare data and scales for rendering 
+      // prepare data and scales for rendering
       this.prepareData();
 
-      this.$.bars = this.$.chart.selectAll('g')
+      this.$.sections = this.$.chart.selectAll('g')
         .data(this._.barsData, this._.labelX);
 
-      this.$.bars.each(this._.updateBar);
+      this.$.sections.each(this._.updateSection);
 
-      this.$.bars.enter().append('g')
+      this.$.sections.enter().append('g')
         .attr('transform', function(d){
           return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
-        }).each(this._.updateBar);
+        }).each(this._.updateSection);
 
-      this.$.bars.exit().selectAll('rect')
+      this.$.sections.selectAll('rect').on('click', function(d, a, i){
+        triggerEvent('click:data', self, {
+          section: i,
+          subsection: a,
+          value: self.data.value[d.bar],
+          label: self.data.label[i]
+        });
+      });
+
+      this.$.sections.exit().selectAll('rect')
         .transition()
           .duration(this.options.animationDuration)
             .attr('y', 170)
@@ -846,7 +887,7 @@
     renderData: function() {
       var self = this;
 
-      this.$.bars.selectAll('rect')
+      this.$.sections.selectAll('rect')
         .attr('height', function(d){
           return self._.scaleY(d.y0) - self._.scaleY(d.y1);
         })
@@ -856,14 +897,15 @@
     },
     afterRender: function() {
       this._.hasRendered = true;
-      if (this.options.canZoom) addZoom.call(this);
+      // REMOVED WHILE CONFLICTING WITH EVENTS
+      // if (this.options.canZoom) addZoom.call(this);
     }
   };
-  
 
-  // 
+
+  //
   // shared chart drawing functions
-  // 
+  //
 
   // shared canvas initialization that creates a frame with axes and labels
   function framedInit() {
@@ -889,7 +931,7 @@
     // set heights and widths now that margin elements have been added
     this._.width -= Math.floor(this._.marginLeft + this._.marginRight);
     this._.height -= Math.floor(this._.marginTop + this._.marginBottom);
-    
+
     if (this.$.bg) {
         this.$.bg.attr('width', this._.width)
           .attr('height', this._.height);
@@ -903,11 +945,11 @@
       .attr('width', hasSVG ? this._.width : this._.width + 1)
       .attr('height', hasSVG ? this._.height : this._.height + 1)
       .call(translate, hasSVG ? 0 : -1, 0.5);
-      
+
     if (!this.options.axis.gridAbove) {
       this.$.chart = this.$.frame.append('g').attr('class', 'jqchart-chart');
     }
-      
+
     // put frame into place
     this.$.frame.call(translate, this._.marginLeft, this._.marginTop + 0.5);
   }
@@ -1099,11 +1141,11 @@
         .call(translate, 0, 1);
     this.$.chart.attr('clip-path', 'url(#clip-path-' + clipPaths + ')');
   }
-  
-  // 
+
+  //
   // SVG helpers
-  // 
-  
+  //
+
   // offset a number by 0.5 to align borders with screen pixels
   // https://groups.google.com/forum/#!topic/d3-js/q1LXpR47xqU
   function cleanPx(px) { return Math.ceil(px) - 0.5; }
@@ -1125,12 +1167,14 @@
 
   // trigger a jquery event on the chart
   function triggerEvent(type, chart, value) {
-    chart.$el.trigger(type, [value, new $.Event(d3.event)]);
+    var ev = $.Event(type, d3.event);
+    ev.type = type;
+    chart.$el.trigger(ev, [value]);
   }
 
-  // 
+  //
   // Data helpers
-  // 
+  //
   var colorScale = d3.scale.category20();
   function rawX(d) { return d[0]; }
   function rawY(d) { return d[1]; }
@@ -1149,7 +1193,7 @@
         tgtData.value.splice(i, 0, resolve(fillValue, [oldData.value[i], i], tgtData));
       }
     }
-    
+
     return tgtData;
   }
 
@@ -1162,7 +1206,7 @@
   }
 
 
-  // 
+  //
   // Utility helpers
   //
 
@@ -1192,5 +1236,5 @@
     });
     return results;
   }
-  
+
 }(this, jQuery));
