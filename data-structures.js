@@ -105,7 +105,7 @@ data.line4 = {
 };
 // Funnel
 data.funnel = {
-	value: 	[ 64284,				62439,					44439,				32192,				2872 ],
+	value: 	[ 64284,				62439,					/*44439*/ 0,				32192,				2872 ],
 	// value: [ 100, 90, 80, 70, 60, 50, 40, 30, 20, 10 ],
 	label:	[ 'Messages Sent', 		'Messages Delivered', 	'Messages Opened',	'Links Clicked',	'Renewed' ],
 	color:	[ '#E76B61',			'#DC4740',				'#F6B863',			'#F6E097',			'#149195']

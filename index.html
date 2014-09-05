@@ -13,6 +13,12 @@
 		height: 200px;
 		width: 400px;
 	}
+	.jqchart-pie .jqchart-section {
+		cursor: pointer;
+	}
+	.jqchart-section-active {
+		fill: blue !important;
+	}
 	</style>
 
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -37,7 +43,8 @@
 	$(bar);
 	$(area);
 	$(funnel);
-	window.setTimeout(line, 1000);
+	$(line);
+	// window.setTimeout(line, 1000);
 
 	// var defaults = {
 	// 	axis: {
@@ -52,8 +59,8 @@
 
 	// $.extend(true, $.fn.jqChart.options.global, defaults);
 
-	$(document).on('click:data', function(e, data){
-		console.log('clicked', data);
+	$(document).on('click:data', function(e, data, chartEl){
+		console.log('clicked', data, chartEl);
 	});
 	function pie() {
 		$('#t1').jqChart('pie', data.pie);
@@ -68,14 +75,24 @@
 	}
 
 	function line() {
-		$('#t3').jqChart('line', data.line /*, {
-			axis: {yAxisSpace: 20}
-		} */);
+		$('#t3').jqChart('line', data.line , {
+			type: 'stacked'
+		});
 	}
 
 	function area() {
 		$('#t4').jqChart('area', data.area, {
-			xDate: true
+			xDate: true,
+			type: 'stacked',
+			tooltip: {
+				renderer: function(d) {
+					return [
+						d.label,
+						d.y + ' on ' + d.xFormatted,
+						'line number ' + d.sectionIndex
+					];
+				}
+			}
 		});
 	}
 	function funnel() {

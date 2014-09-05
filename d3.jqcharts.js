@@ -64,6 +64,14 @@
       borderColor: '#ccc',
       paddingTop: 10
     },
+    tooltip: {
+      enabled: true,
+      renderer: tooltipXYDefault,
+      fontSize: 12,
+      fontFamily: 'Verdana',
+      fontColor: '#444',
+      dotColor: '#000'
+    },
     xGrid: true,
     yGrid: true,
     canZoom: true,
@@ -114,6 +122,7 @@
 
     addSVG: function() {
       this.$.svg = d3.select(this.element).append('svg')
+        .classed('jqchart-' + this.type, true)
         .attr('height', this._.height)
         .attr('width', this._.width)
         .style('overflow', 'hidden');
@@ -298,6 +307,8 @@
       var enterGroup = this.$.sections.enter().append('g');
 
       enterGroup.append('path')
+        .classed('jqchart-section', true)
+        .classed('jqchart-section-clickable', true)
         .attr('fill', this._.color)
         .attr('stroke', this.options.strokeColor)
         .attr('stroke-width', this.options.strokeWidth);
@@ -308,14 +319,23 @@
 
       enterGroup.call(this._.updateSection);
 
-      this.$.sections.selectAll('path').on('click', function(d, a, i){
-        triggerEvent('click:data', self, {
-          section: i,
-          value: d.value,
-          percent: d.value / self._.total * 100,
-          label: self.data.label[i]
+      this.$.sections.selectAll('path')
+        .on('mouseover', function(){
+          d3.select(this)
+            .classed('jqchart-section-active', true)
+        })
+        .on('mouseout', function(){
+          d3.select(this)
+            .classed('jqchart-section-active', false)
+        })
+        .on('click', function(d, a, i){
+          triggerEvent('click:data', self, {
+            section: i,
+            value: d.value,
+            percent: d.value / self._.total * 100,
+            label: self.data.label[i]
+          });
         });
-      });
     }
   };
 
@@ -421,6 +441,8 @@
         });
 
       enterGroup.append('path')
+        .classed('jqchart-section', true)
+        .classed('jqchart-section-clickable', true)
         .attr('d', this._.area)
         .attr('fill', this._.color);
 
@@ -441,19 +463,29 @@
         .attr('y', this.options.axis.fontSize * 1.3)
         .text(function(d, i){
           var text = self._.numberFormat(self.data.value[i]);
-          if (self.data.value[i-1] !== undefined) {
+          if (self.data.value[i-1] !== undefined && // account for start value
+            self.data.value[i-1] !== 0) { // account for diving by 0
             text += ' (' + self._.percentFormat(self.data.value[i] / self.data.value[i-1]) + ')';
           }
           return text;
         }).call(styleText, this.options.axis, 'start');
 
-      this.$.sections.selectAll('path').on('click', function(d, a, i){
-        triggerEvent('click:data', self, {
-          section: i,
-          value: self.data.value[i],
-          label: self.data.label[i]
+      this.$.sections.selectAll('path')
+        .on('mouseover', function(){
+          d3.select(this)
+            .classed('jqchart-section-active', true)
+        })
+        .on('mouseout', function(){
+          d3.select(this)
+            .classed('jqchart-section-active', false)
+        })
+        .on('click', function(d, a, i){
+          triggerEvent('click:data', self, {
+            section: i,
+            value: self.data.value[i],
+            label: self.data.label[i]
+          });
         });
-      });
 
     }
   };
@@ -482,6 +514,9 @@
 
       // y axis
       yFrameUtils.call(this);
+
+      // hover points
+      voronoiUtils.call(this);
 
       // line builder
       this._.line = d3.svg.line()
@@ -519,7 +554,7 @@
           return self.data.color[i];
         } else if (typeof self.data.color === 'string') {
           return self.data.color;
-        } else return '#000';
+        } else return '#444';
       };
     },
     // update scale and axis utilities with new domains
@@ -552,6 +587,7 @@
       // prepare data and scales for rendering
       this.prepareData();
 
+      // render chart
       this.$.sections = this.$.chart.selectAll('path')
         .data(this._.lineData, function(d){
           return d.label;
@@ -562,24 +598,53 @@
         .attr('d', this._.lineValue);
 
       this.$.sections.enter().append('path')
-        .attr('d', this._.lineValue)
+        .classed('jqchart-section', true)
+        .attr('d', function(d, i){
+          d.element = this;
+          return self._.lineValue(d, i);
+        })
         .attr('stroke', this._.color)
         .attr('fill', 'none')
         .attr('stroke-width', '' + this.options.lineWidth)
         .each(this._.addLine);
 
-      this.$.sections.on('click', function(d, a, i){
-        triggerEvent('click:data', self, {
-          section: i,
-          value: d.value,
-          label: self.data.label[i]
-        });
-      });
-
       this.$.sections.exit().remove();
+
+      this.updateInteractionLayer();
+    },
+    updateInteractionLayer: function(){
+      var self = this;
+      if (!hasSVG) {
+        // non-point interactions for old browsers without SVG
+        this.$.sections
+          .classed('jqchart-section-clickable', true)
+          .on('click', function(d, a, i){
+            triggerEvent('click:data', self, {
+              section: i,
+              value: d.value,
+              label: self.data.label[i]
+            });
+          });
+      } else {
+        // point-specific (voronoi) interactions
+        var flattened = $.map(this._.lineData, function(v, i){
+          return $.map(v.value, function(vv, ii){
+            return {
+              point: vv,
+              pointIndex: ii,
+              section: v.element,
+              sectionIndex: i,
+              name: v.label
+            }
+          });
+        });
+
+        voronoiUpdate.call(this, flattened);
+      }
     },
     renderData: function() {
       this.$.sections.attr('d', this._.lineValue);
+      this.updateInteractionLayer();
     },
     afterRender: function() {
       // REMOVED WHILE CONFLICTING WITH EVENTS
@@ -591,6 +656,9 @@
   // area charts
   //
   plugin.options.area = {
+    type: 'stacked',
+    layerOpacity: 0.3,
+    lineWidth: 0,
     axis: {
       gridAbove: true
     }
@@ -611,6 +679,9 @@
       // y axis
       yFrameUtils.call(this);
 
+      // hover points
+      voronoiUtils.call(this);
+
       // stack builder
       this._.stack = d3.layout.stack()
         .offset('zero')
@@ -620,6 +691,13 @@
         .y(function(d){
           return d[1];
         });
+
+      if (this.options.type === 'layered') {
+        this._.stack.out(function(d, y0, y){
+          d.y = y;
+          d.y0 = 0;
+        });
+      }
 
       // area builder
       this._.area = d3.svg.area()
@@ -639,7 +717,7 @@
           return self.data.color[i];
         } else if (typeof self.data.color === 'string') {
           return self.data.color;
-        } else return '#000';
+        } else return '#444';
       };
     },
     prepareData: function() {
@@ -656,10 +734,17 @@
         d3.min(this.data.value, this._.minX),
         d3.max(this.data.value, this._.maxX)
       ]);
-      this._.scaleY.domain([
-        0,
-        d3.max(this._.stackData[this._.stackData.length - 1], this._.getY)
-      ]);
+      if (this.options.type === 'layered') {
+        this._.scaleY.domain([
+          0,
+          d3.max(this._.stackData, this._.maxY)
+        ]);
+      } else {
+        this._.scaleY.domain([
+          0,
+          d3.max(this._.stackData[this._.stackData.length - 1], this._.getY)
+        ]);
+      }
 
       // create a flat line to transition exiting areas towards
       var zeroLine = unique(this.data.value, function(line){
@@ -687,28 +772,57 @@
       this.prepareData();
 
       this.$.sections = this.$.chart.selectAll('path')
-        .data(this._.stack(this.data.value));
+        .data(this._.stackData);
 
       this.$.sections.enter().append('path')
-        .attr('fill', this._.color);
+        .classed('jqchart-section', true)
+        .attr('fill', this._.color)
+        .style('fill-opacity', this.options.type == 'stacked' ? 1 : this.options.layerOpacity)
+        .style('stroke', this._.color)
+        .style('stroke-width', this.options.lineWidth);
 
       this.$.sections.transition()
         .duration(this.options.animationDuration)
-          .attr('d', this._.area);
+          .attr('d', function(d, i){
+            d.element = this;
+            return self._.area(d, i);
+          });
 
       this.$.sections.exit().remove();
 
-      this.$.sections.on('click', function(d, i){
-        console.log('clicked on number', d, i);
-        triggerEvent('click:data', self, {
-          section: i,
-          value: $.map(self.data.value[i], function(eachValue){
-            return [eachValue.slice()];
-          }),
-          label: self.data.label[i]
+      this.updateInteractionLayer();
+    },
+    updateInteractionLayer: function() {
+      var self = this;
+      if (!hasSVG) {
+        // non-point interactions for old browsers without SVG
+        this.$.sections
+          .classed('jqchart-section-clickable', true)
+          .on('click', function(d, i){
+            triggerEvent('click:data', self, {
+              section: i,
+              value: $.map(self.data.value[i], function(eachValue){
+                return [eachValue.slice()];
+              }),
+              label: self.data.label[i]
+            });
+          });
+      } else {
+        // point-specific (voronoi) interactions
+        var flattened = $.map(this._.stackData, function(v, i){
+          return $.map(v, function(vv, ii){
+            return {
+              point: [vv[0], vv.y0 + vv.y],
+              pointIndex: ii,
+              section: v.element,
+              sectionIndex: i,
+              name: self.data.label[i]
+            };
+          });
         });
-      });
 
+        voronoiUpdate.call(this, flattened);
+      }
     },
     renderData: function() {
       this.$.sections.attr('d', this._.area);
@@ -726,6 +840,9 @@
     axis: {
       barSpacing: 0.3,
       gridAbove: false
+    },
+    tooltip: {
+      renderer: tooltipBarDefault
     }
   };
   plugin.types.bar = {
@@ -751,53 +868,58 @@
       // y axis
       yFrameUtils.call(this);
 
+      // add tooltip elements for hover
+      tooltipUtils.call(this, false);
+
       // convert data for bar section measurements
       this._.getBarData = function(data) {
         var barsData = [];
 
         // data for each bar
-        $.each(data.value, function(barI, bar){
+        $.each(data.value, function(sectionI, section){
           var y0 = 0;
-          var barData = bar instanceof Array ? $.extend([], bar) : [bar];
+          var sectionData = section instanceof Array ? $.extend([], section) : [section];
 
           // data for each bar section
-          barData = $.map(barData, function(sectionValue, sectionI){
+          sectionData = $.map(sectionData, function(subsectionValue, subsectionI){
             return {
               y0: y0,
-              y1: y0 += sectionValue,
-              color: self._.color(barI, sectionI),
-              bar: barI,
-              total: barData.length
+              y1: y0 += subsectionValue,
+              color: self._.color(sectionI, subsectionI),
+              section: sectionI,
+              subsection: subsectionI,
+              label: data.label[sectionI],
+              total: sectionData.length
             };
           });
-          barData.total = barData[barData.length-1].y1;
-          barData.label = data.label[barI];
-          barsData.push(barData);
+          sectionData.total = sectionData[sectionData.length-1].y1;
+          sectionData.label = data.label[sectionI];
+          barsData.push(sectionData);
         });
 
         return barsData;
       };
 
       // data color utility
-      this._.color = function(barI, sectionI) {
+      this._.color = function(sectionI, subsectionI) {
         var barColor;
-        var barSections = self.data.value[barI].length || 1;
+        var barSections = self.data.value[sectionI].length || 1;
 
-        if (self.data.color instanceof Array && self.data.color[sectionI]) {
-          barColor = self.data.color[barI];
+        if (self.data.color instanceof Array && self.data.color[subsectionI]) {
+          barColor = self.data.color[sectionI];
         } else {
-          barColor = colorScale(barI);
+          barColor = colorScale(sectionI);
         }
 
         if (typeof barColor === 'string') {
-          return d3.rgb(barColor).brighter(sectionI / barSections).toString();
-        } else if (barColor instanceof Array && barColor[sectionI]) {
-          return barColor[sectionI];
+          return d3.rgb(barColor).brighter(subsectionI / barSections).toString();
+        } else if (barColor instanceof Array && barColor[subsectionI]) {
+          return barColor[subsectionI];
         }
       };
 
       // bar update transition
-      this._.updateSection = function(barData) {
+      this._.updateSection = function(sectionData) {
         d3.select(this).transition()
           .duration(self.options.animationDuration)
             .attr('transform', function(d){
@@ -805,7 +927,7 @@
             });
 
         var section = d3.select(this).selectAll('rect')
-          .data(barData);
+          .data(sectionData);
 
         section.call(self._.updateSubsection);
 
@@ -827,7 +949,7 @@
           .duration(self._.hasRendered ? self.options.animationDuration : self.options.animationDuration / 2)
           .delay(function(d){
             if (self._.hasRendered) return 0;
-            return d.bar / self._.barsData.length * (self.options.animationDuration / 2);
+            return d.section / self._.barsData.length * (self.options.animationDuration / 2);
           })
           .attr('width', function(){
             return self._.scaleX.rangeBand();
@@ -864,16 +986,56 @@
       this.$.sections.enter().append('g')
         .attr('transform', function(d){
           return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
-        }).each(this._.updateSection);
+        })
+        .each(this._.updateSection);
 
-      this.$.sections.selectAll('rect').on('click', function(d, a, i){
-        triggerEvent('click:data', self, {
-          section: i,
-          subsection: a,
-          value: self.data.value[d.bar],
-          label: self.data.label[i]
+      this.$.sections.selectAll('rect')
+        .each(function(d, i){
+          d.element = this;
+        })
+        .classed('jqchart-section', true)
+        .classed('jqchart-section-clickable', true)
+        .on('click', function(d, a, i){
+          triggerEvent('click:data', self, {
+            section: i,
+            subsection: a,
+            value: self.data.value[d.section],
+            label: self.data.label[i]
+          });
+        })
+        .on('mouseover', function(d, i){
+          // toggle bar color on
+          d3.select(this)
+            .classed('jqchart-section-active', true)
+            .style('fill', function(dd, ii){
+              return d3.rgb(self._.color(d.section, d.subsection)).darker();
+            });
+
+          // update the tooltip
+          showTooltip.call(self,
+            self._.scaleX(d.label), // x position
+            self._.scaleY(d.y1), // y position
+            { // rendering function arguments
+              label: d.label,
+              value: d.y1 - d.y0,
+              sectionIndex: d.section,
+              subsectionIndex: d.subsection
+            }
+          );
+        })
+        .on('mouseout', function(d, i){
+          // toggle bar color off
+          d3.select(this)
+            .classed('jqchart-section-active', false)
+            .style('fill', function(dd, ii){
+              return self._.color(d.section, d.subsection);
+            });
+
+          // // move tooltip out
+          if (self.options.tooltip.enabled) {
+            self.$.focus.call(translate, -100, -100);
+          }
         });
-      });
 
       this.$.sections.exit().selectAll('rect')
         .transition()
@@ -952,6 +1114,18 @@
 
     // put frame into place
     this.$.frame.call(translate, this._.marginLeft, this._.marginTop + 0.5);
+
+
+    // clip chart viewing window to frame
+    ++clipPaths;
+    this.$.frame.append('clipPath')
+      .attr('id', 'clip-path-' + clipPaths)
+      .append('rect')
+        .attr('fill', 'none')
+        .attr('width', this._.width - 1)
+        .attr('height', this._.height - 1)
+        .call(translate, 0, 1);
+    this.$.chart.attr('clip-path', 'url(#clip-path-' + clipPaths + ')');
   }
 
   // add chart labels
@@ -1049,10 +1223,11 @@
       .tickPadding(hasSVG ? 6 : 10)
       .ticks(5);
     if (this.options.xDate) {
-      this._.axisX.tickFormat(d3.time.format(this.options.dateFormat));
+      this._.formatX = d3.time.format(this.options.dateFormat);
     } else {
-      this._.axisX.tickFormat(this._.numberFormat);
+      this._.formatX = this._.numberFormat;
     }
+    this._.axisX.tickFormat(this._.formatX);
     if (this.options.xGrid) {
       this._.axisX.tickSize(-this._.height);
     } else {
@@ -1129,17 +1304,189 @@
     $(this.element).on('focus blur', function(){
       $(zoomTgt).toggle(self.element === window.document.activeElement);
     });
+  }
 
-    // clip chart viewing window to frame
-    ++clipPaths;
-    this.$.frame.append('clipPath')
-      .attr('id', 'clip-path-' + clipPaths)
-      .append('rect')
-        .attr('fill', 'none')
-        .attr('width', this._.width - 1)
-        .attr('height', this._.height - 1)
-        .call(translate, 0, 1);
-    this.$.chart.attr('clip-path', 'url(#clip-path-' + clipPaths + ')');
+  // adding hover capabilities to nearest point using voronoi diagram
+  function voronoiUtils() {
+    var self = this;
+    if (!hasSVG) return;
+
+    this._.voronoi = d3.geom.voronoi()
+      .x(function(d){
+        return self._.scaleX(self._.getX(d.point)) + (0.01 * (Math.random() - 0.5));
+      })
+      .y(function(d){
+        return self._.scaleY(d.point[1]);
+      })
+      .clipExtent([[0, 0],[this._.width, this._.height]]);
+
+    tooltipUtils.call(this, true);
+
+    // add layer group for interaction targets
+    this.$.interactions = this.$.frame.append('g').attr('class', 'jqchart-hover-overlay');
+  }
+
+  // add the tooltip popup
+  function tooltipUtils(hasPoint) {
+    if (!this.options.tooltip.enabled) return;
+    
+    this.$.focus = this.$.frame.append('g').call(translate, -100, -100);
+
+    if (hasPoint) {
+      // tooltip dot
+      this.$.focus.append('circle')
+        .attr('r', 3.5)
+        .style('fill', this.options.tooltip.dotColor);
+    }
+
+    // tooltip top line
+    this.$.focus.append('text')
+      .attr('class', 'jqchart-hover-title')
+      .style('text-shadow', '0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff')
+      .attr('y', this.options.tooltip.fontSize * -2.5)
+      .call(styleText, this.options.tooltip);
+
+    // tooltip bottom line
+    this.$.focus.append('text')
+      .attr('class', 'jqchart-hover-coords')
+      
+  }
+  // tooltip default renderer: bar charts
+  function tooltipBarDefault(target) {
+    return [
+      target.label,
+      target.value
+    ];
+  }
+
+  // tooltip default renderer: line and area charts
+  function tooltipXYDefault(target) {
+    return [
+        target.label,
+        target.xFormatted + ' - ' + target.y
+      ];
+  }
+
+  // update voronoi interaction layers based on flat array of point objects
+  function voronoiUpdate(flattenedData) {
+    var self = this;
+
+    if (this.$.voronoi) this.$.voronoi.remove();
+    this.$.voronoi = this.$.interactions.selectAll('path')
+      .data(this._.voronoi(flattenedData));
+
+    this.$.voronoi.enter().append('path')
+      .classed('jqchart-section-clickable', true)
+      .style('fill', this.options.frame.backgroundColor)
+      .style('fill-opacity', 0.1)
+      // .style('stroke', 'blue').style('stroke-opacity', 0.2)
+      .attr('d', function(d) {
+        if (d.length > 1)
+          return 'M' + d.join('L') + 'Z';
+      })
+      .on('mouseover', function(d, i){
+        // toggle line color on
+        d3.select(d.point.section)
+          .classed('jqchart-section-active', true)
+          .style('stroke', function(dd, ii){
+              return d3.rgb(self._.color(dd.value, d.point.sectionIndex)).darker();
+            });
+
+        // toggle area color on
+        if (self.type === 'area') {
+          d3.select(d.point.section)
+            .style('fill', function(dd, ii){
+              return d3.rgb(self._.color(dd.value, d.point.sectionIndex)).darker();
+            })
+            .style('fill-opacity', (1 + self.options.layerOpacity) / 2);
+        }
+
+        // update the tooltip
+        showTooltip.call(self,
+          self._.scaleX(self._.getX(d.point.point)), // x position
+          self._.scaleY(d.point.point[1]), // y position
+          { // rendering function arguments
+            label: d.point.name,
+            x: self._.getX(d.point.point),
+            y: d.point.point[1],
+            xFormatted: self._.formatX(self._.getX(d.point.point)),
+            sectionIndex: d.point.sectionIndex,
+            pointIndex: d.point.pointIndex
+          }
+        );
+      })
+      .on('mouseout', function(d, i){
+        // toggle line color off
+        d3.select(d.point.section)
+          .classed('jqchart-section-active', false)
+          .style('stroke', function(dd, ii){
+            return self._.color(dd.value, d.point.sectionIndex);
+          })
+
+        // toggle area color off
+        if (self.type === 'area') {
+          d3.select(d.point.section)
+            .style('fill', function(dd, ii){
+              return self._.color(dd.value, d.point.sectionIndex);
+            })
+            .style('fill-opacity', self.options.type == 'stacked' ? 1 : self.options.layerOpacity);
+        }
+
+        // move tooltip out
+        if (self.options.tooltip.enabled) {
+          self.$.focus.call(translate, -100, -100);
+        }
+      })
+      .on('click', function(d, i){
+        triggerEvent('click:data', self, {
+          section: d.point.sectionIndex,
+          point: d.point.pointIndex,
+          value: d.point.point,
+          label: d.point.name
+        });
+      });
+
+    this.$.voronoi.exit().remove();
+  }
+
+  // tooltip bar rendering on mouse over
+  function showTooltip(tooltipX, tooltipY, renderArgs) {
+    if (!this.options.tooltip.enabled) return;
+
+    var self = this;
+    var textX = 0;
+    var textY = this.options.tooltip.fontSize;
+
+    // get tooltip text, calling line renderer with point data
+    var tooltipText = this.options.tooltip.renderer.call(window, renderArgs);
+    
+    if (!(tooltipText instanceof Array)) tooltipText = [tooltipText];
+
+    // account for number of lines in vertical offset
+    textY *= -1.5 * tooltipText.length + 0.5;
+
+    // account for hitting the edge
+    textX = (tooltipX / this._.width) * -50 + 25;
+    if (tooltipY + textY < 0 + this._.marginTop) {
+      textY = this.options.tooltip.fontSize + 5;
+    }
+
+    // remove old text
+    this.$.focus.selectAll('text').remove();
+
+    // render each text line
+    $.each(tooltipText, function(lineI){
+      self.$.focus.append('text')
+        .classed('jqchart-tooltip-line-' + lineI, true)
+        .attr('x', textX)
+        .attr('y', textY + (self.options.tooltip.fontSize * 1.5 * lineI))
+        .style('text-shadow', '0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff')
+        .call(styleText, self.options.tooltip)
+        .text(this);
+    });
+
+    // move tooltip
+    this.$.focus.call(translate, tooltipX, tooltipY);
   }
 
   //
@@ -1169,7 +1516,7 @@
   function triggerEvent(type, chart, value) {
     var ev = $.Event(type, d3.event);
     ev.type = type;
-    chart.$el.trigger(ev, [value]);
+    chart.$el.trigger(ev, [value, chart.$el]);
   }
 
   //
