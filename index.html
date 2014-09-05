@@ -81,9 +81,9 @@
 	}
 
 	function area() {
-		$('#t4').jqChart('area', data.area, {
+		$('#t4').jqChart('area', data.areaInclusive, {
 			xDate: true,
-			type: 'stacked',
+			type: 'inclusive',
 			tooltip: {
 				renderer: function(d) {
 					return [

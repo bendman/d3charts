@@ -656,7 +656,7 @@
   // area charts
   //
   plugin.options.area = {
-    type: 'stacked',
+    type: 'stacked', // stacked, layered, or inclusive
     layerOpacity: 0.3,
     lineWidth: 0,
     axis: {
@@ -697,6 +697,11 @@
           d.y = y;
           d.y0 = 0;
         });
+      } else if (this.options.type === 'inclusive') {
+        this._.stack.out(function(d, y0, y){
+          d.y = Math.max(y - y0, 0);
+          d.y0 = y0;
+        });
       }
 
       // area builder
@@ -734,7 +739,7 @@
         d3.min(this.data.value, this._.minX),
         d3.max(this.data.value, this._.maxX)
       ]);
-      if (this.options.type === 'layered') {
+      if (this.options.type === 'layered' || this.options.type === 'inclusive') {
         this._.scaleY.domain([
           0,
           d3.max(this._.stackData, this._.maxY)
@@ -777,7 +782,7 @@
       this.$.sections.enter().append('path')
         .classed('jqchart-section', true)
         .attr('fill', this._.color)
-        .style('fill-opacity', this.options.type == 'stacked' ? 1 : this.options.layerOpacity)
+        .style('fill-opacity', this.options.type == 'layered' ? this.options.layerOpacity : 1)
         .style('stroke', this._.color)
         .style('stroke-width', this.options.lineWidth);
 
@@ -1429,7 +1434,7 @@
             .style('fill', function(dd, ii){
               return self._.color(dd.value, d.point.sectionIndex);
             })
-            .style('fill-opacity', self.options.type == 'stacked' ? 1 : self.options.layerOpacity);
+            .style('fill-opacity', self.options.type == 'layered' ? self.options.layerOpacity : 1);
         }
 
         // move tooltip out
