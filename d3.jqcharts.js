@@ -345,6 +345,16 @@
   plugin.options.funnel = {
     label: {
       width: 150
+    },
+    axis: {
+      renderer: function(values, i, format) {
+        var text = format.number(values[i]);
+        // account for dividing by 0
+        if (values[i-1] !== 0 && values[i-1] !== undefined) {
+          text += ' (' + format.percent(values[i] / values[i-1]) + ')';
+        }
+        return text;
+      }
     }
   };
   plugin.types.funnel = {
@@ -462,12 +472,11 @@
         .attr('class', 'jqchart-funnel-value')
         .attr('y', this.options.axis.fontSize * 1.3)
         .text(function(d, i){
-          var text = self._.numberFormat(self.data.value[i]);
-          if (self.data.value[i-1] !== undefined && // account for start value
-            self.data.value[i-1] !== 0) { // account for diving by 0
-            text += ' (' + self._.percentFormat(self.data.value[i] / self.data.value[i-1]) + ')';
-          }
-          return text;
+            var text = self.options.axis.renderer.call(window, self.data.value, i, {
+              number: self._.numberFormat,
+              percent: self._.percentFormat
+            });
+            return (typeof text === 'string') ? text : '';
         }).call(styleText, this.options.axis, 'start');
 
       this.$.sections.selectAll('path')

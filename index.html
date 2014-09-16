@@ -96,7 +96,24 @@
 		});
 	}
 	function funnel() {
-		$('#t5').jqChart('funnel', data.funnel);
+		$('#t5').jqChart('funnel', data.funnel, {
+			axis: {
+				renderer: function(values, i, format) {
+					var text = format.number(values[i]);
+					// account for dividing by 0
+					if (i >= 2) denominator = 1;
+					else denominator = i-1;
+
+					if (values[denominator] !== 0 && values[denominator] !== undefined) {
+						text += ' (' + format.percent(values[i] / values[denominator]);
+						if (denominator === 1) text += ' of Delivered)';
+						else text += ')';
+					}
+
+					return text;
+				}
+			}
+		});
 	}
 
 	</script>
