@@ -874,13 +874,16 @@
       this._.scaleX = d3.scale.ordinal()
         .rangeRoundBands([0, this._.width], this.options.axis.barSpacing, this.options.axis.barSpacing * 0.75);
       this._.scaleX.range();
-      this._.axisX = d3.svg.axis().orient('bottom').tickSize(0);
+      if (this.options.axis.x !== false) {
+        this._.axisX = d3.svg.axis().orient('bottom').tickSize(0);
+      }
       this._.labelX = function(d){
         return d.label;
       };
 
       // y axis
       yFrameUtils.call(this);
+      if (this.options.axis.y === false) this._.axisY = null;
 
       // add tooltip elements for hover
       tooltipUtils.call(this, false);
@@ -980,8 +983,8 @@
       this._.barsData = this._.getBarData(this.data);
       this._.scaleX.domain($.map(this._.barsData, this._.labelX));
       this._.scaleY.domain([0, d3.max(this._.barsData, this._.maxY)]);
-      this._.axisX.scale(this._.scaleX);
-      this._.axisY.scale(this._.scaleY);
+      this._.axisX && this._.axisX.scale(this._.scaleX);
+      this._.axisY && this._.axisY.scale(this._.scaleY);
       this._.updateAxes();
     },
     renderChart: function() {
@@ -1202,12 +1205,12 @@
     };
 
     this._.updateAxes = function() {
-      if (self.$.axisX) {
+      if (self.$.axisX && self._.axisX) {
         self.$.axisX.call(self._.axisX).call(self._.styleAxis)
           .selectAll('text')
             .call(translate, 0, self.options.axis.xAxisMargin);
       }
-      if (self.$.axisY) {
+      if (self.$.axisY && self._.axisY) {
         self.$.axisY.call(self._.axisY).call(self._.styleAxis)
           .selectAll('text')
             .call(translate, -self.options.axis.yAxisMargin, 0);

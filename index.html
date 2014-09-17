@@ -67,11 +67,12 @@
 	}
 
 	function bar() {
-		$('#t2').jqChart('bar', data.barStacked/*, {
+		$('#t2').jqChart('bar', data.barStacked, {
 			axis: {
-				yAxisSpace: 20
+				x: false,
+				y: false
 			}
-		}*/);
+		});
 	}
 
 	function line() {
@@ -101,6 +102,7 @@
 				renderer: function(values, i, format) {
 					var text = format.number(values[i]);
 					// account for dividing by 0
+					var denominator;
 					if (i >= 2) denominator = 1;
 					else denominator = i-1;
 
