@@ -38,7 +38,7 @@
 	<script type="text/javascript">
 	// $(pie);
 	// $(bar);
-	// $(area);
+	$(area);
 	// $(funnel);
 	$(line);
 	// window.setTimeout(line, 1000);
@@ -88,6 +88,9 @@
 		$('#t4').jqChart('area', data.areaInclusive, {
 			xDate: true,
 			type: 'inclusive',
+			axis: {
+				resolution: d3.time.days
+			},
 			tooltip: {
 				renderer: function(d) {
 					return [

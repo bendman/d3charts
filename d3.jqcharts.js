@@ -57,7 +57,8 @@
       xAxisMargin: 0,
       yAxisMargin: 0,
       xAxisSpace: 'auto',
-      yAxisSpace: 'auto'
+      yAxisSpace: 'auto',
+      resolution: 5
     },
     frame: {
       backgroundColor: '#fff',
@@ -1244,7 +1245,7 @@
     this._.scaleX.range([0, this._.width]);
     this._.axisX = d3.svg.axis().orient('bottom')
       .tickPadding(hasSVG ? 6 : 10)
-      .ticks(5);
+      .ticks(this.options.axis.resolution);
     if (this.options.xDate) {
       this._.formatX = d3.time.format(this.options.dateFormat);
     } else {
