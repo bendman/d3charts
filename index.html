@@ -16,9 +16,6 @@
 	.jqchart-pie .jqchart-section {
 		cursor: pointer;
 	}
-	.jqchart-section-active {
-		fill: blue !important;
-	}
 	</style>
 
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -39,10 +36,10 @@
 	<script src="d3.jqcharts.js"></script>
 
 	<script type="text/javascript">
-	$(pie);
-	$(bar);
-	$(area);
-	$(funnel);
+	// $(pie);
+	// $(bar);
+	// $(area);
+	// $(funnel);
 	$(line);
 	// window.setTimeout(line, 1000);
 
@@ -77,7 +74,13 @@
 
 	function line() {
 		$('#t3').jqChart('line', data.line , {
-			type: 'stacked'
+			type: 'stacked',
+			tooltip: {
+				backgroundColor: '#000',
+				fontColor: '#FFF',
+				dotColor: '#FFF',
+				dotBorderWidth: 3
+			}
 		});
 	}
 
@@ -89,8 +92,7 @@
 				renderer: function(d) {
 					return [
 						d.label,
-						d.y + ' on ' + d.xFormatted,
-						'line number ' + d.sectionIndex
+						d.y + ' on ' + d.xFormatted
 					];
 				}
 			}

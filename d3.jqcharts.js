@@ -69,8 +69,14 @@
       renderer: tooltipXYDefault,
       fontSize: 12,
       fontFamily: 'Verdana',
+      fontWeight: 200,
       fontColor: '#444',
-      dotColor: '#000'
+      dotColor: '#676767',
+      dotBorderWidth: 0,
+      dotBorderColor: '#000',
+      padding: 5,
+      backgroundColor: '#FFF',
+      backgroundOpacity: 0.67
     },
     xGrid: true,
     yGrid: true,
@@ -1349,23 +1355,28 @@
     
     this.$.focus = this.$.frame.append('g').call(translate, -100, -100);
 
+    this.$.focus.append('rect')
+      .style('fill', this.options.tooltip.backgroundColor)
+      .style('opacity', this.options.tooltip.backgroundOpacity);
+
     if (hasPoint) {
       // tooltip dot
       this.$.focus.append('circle')
         .attr('r', 3.5)
+        .style('stroke', this.options.tooltip.dotBorderColor)
+        .style('stroke-width', this.options.tooltip.dotBorderWidth)
         .style('fill', this.options.tooltip.dotColor);
     }
 
     // tooltip top line
     this.$.focus.append('text')
       .attr('class', 'jqchart-hover-title')
-      .style('text-shadow', '0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff')
       .attr('y', this.options.tooltip.fontSize * -2.5)
       .call(styleText, this.options.tooltip);
 
     // tooltip bottom line
     this.$.focus.append('text')
-      .attr('class', 'jqchart-hover-coords')
+      .attr('class', 'jqchart-hover-coords');
       
   }
   // tooltip default renderer: bar charts
@@ -1471,6 +1482,8 @@
     if (!this.options.tooltip.enabled) return;
 
     var self = this;
+    var pad = this.options.tooltip.padding;
+    lineHeight = this.options.tooltip.fontSize * 1.5;
     var textX = 0;
     var textY = this.options.tooltip.fontSize;
 
@@ -1496,11 +1509,19 @@
       self.$.focus.append('text')
         .classed('jqchart-tooltip-line-' + lineI, true)
         .attr('x', textX)
-        .attr('y', textY + (self.options.tooltip.fontSize * 1.5 * lineI))
-        .style('text-shadow', '0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff')
-        .call(styleText, self.options.tooltip)
+        .attr('y', textY + (lineHeight * lineI))
+        .call(styleText, self.options.tooltip, 'left')
         .text(this);
     });
+
+    var textWidth = Math.max.apply(null, $.map(this.$.focus.selectAll('text')[0], function(text){
+      return text.getBoundingClientRect().width;
+    }));
+
+    this.$.focus.selectAll('rect')
+      .attr('height', lineHeight * tooltipText.length - (lineHeight / 2) + pad * 2)
+      .attr('width', textWidth + (2 * pad))
+      .call(translate, textX - pad, textY - (self.options.tooltip.fontSize/1.3) - pad);
 
     // move tooltip
     this.$.focus.call(translate, tooltipX, tooltipY);
@@ -1525,6 +1546,7 @@
   function styleText(label, options, anchor) {
     label.attr('text-anchor', anchor || 'middle')
       .style('font-family', options.fontFamily)
+      .style('font-weight', options.fontWeight || 'normal')
       .style('font-size', options.fontSize + 'px')
       .attr('fill', options.fontColor);
   }
