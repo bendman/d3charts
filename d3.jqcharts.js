@@ -329,11 +329,11 @@
       this.$.sections.selectAll('path')
         .on('mouseover', function(){
           d3.select(this)
-            .classed('jqchart-section-active', true)
+            .classed('jqchart-section-active', true);
         })
         .on('mouseout', function(){
           d3.select(this)
-            .classed('jqchart-section-active', false)
+            .classed('jqchart-section-active', false);
         })
         .on('click', function(d, a, i){
           triggerEvent('click:data', self, {
@@ -489,11 +489,11 @@
       this.$.sections.selectAll('path')
         .on('mouseover', function(){
           d3.select(this)
-            .classed('jqchart-section-active', true)
+            .classed('jqchart-section-active', true);
         })
         .on('mouseout', function(){
           d3.select(this)
-            .classed('jqchart-section-active', false)
+            .classed('jqchart-section-active', false);
         })
         .on('click', function(d, a, i){
           triggerEvent('click:data', self, {
@@ -651,7 +651,7 @@
               section: v.element,
               sectionIndex: i,
               name: v.label
-            }
+            };
           });
         });
 
@@ -1014,7 +1014,7 @@
         .each(this._.updateSection);
 
       this.$.sections.selectAll('rect')
-        .each(function(d, i){
+        .each(function(d){
           d.element = this;
         })
         .classed('jqchart-section', true)
@@ -1027,11 +1027,11 @@
             label: self.data.label[i]
           });
         })
-        .on('mouseover', function(d, i){
+        .on('mouseover', function(d){
           // toggle bar color on
           d3.select(this)
             .classed('jqchart-section-active', true)
-            .style('fill', function(dd, ii){
+            .style('fill', function(){
               return d3.rgb(self._.color(d.section, d.subsection)).darker();
             });
 
@@ -1047,11 +1047,11 @@
             }
           );
         })
-        .on('mouseout', function(d, i){
+        .on('mouseout', function(d){
           // toggle bar color off
           d3.select(this)
             .classed('jqchart-section-active', false)
-            .style('fill', function(dd, ii){
+            .style('fill', function(){
               return self._.color(d.section, d.subsection);
             });
 
@@ -1413,21 +1413,20 @@
         if (d.length > 1)
           return 'M' + d.join('L') + 'Z';
       })
-      .on('mouseover', function(d, i){
+      .on('mouseover', function(d){
         // toggle line color on
         d3.select(d.point.section)
           .classed('jqchart-section-active', true)
-          .style('stroke', function(dd, ii){
+          .style('stroke', function(dd){
               return d3.rgb(self._.color(dd.value, d.point.sectionIndex)).darker();
             });
 
         // toggle area color on
         if (self.type === 'area') {
           d3.select(d.point.section)
-            .style('fill', function(dd, ii){
+            .style('fill', function(dd){
               return d3.rgb(self._.color(dd.value, d.point.sectionIndex)).darker();
-            })
-            .style('fill-opacity', (1 + self.options.layerOpacity) / 2);
+            });
         }
 
         // update the tooltip
@@ -1444,18 +1443,18 @@
           }
         );
       })
-      .on('mouseout', function(d, i){
+      .on('mouseout', function(d){
         // toggle line color off
         d3.select(d.point.section)
           .classed('jqchart-section-active', false)
-          .style('stroke', function(dd, ii){
+          .style('stroke', function(dd){
             return self._.color(dd.value, d.point.sectionIndex);
-          })
+          });
 
         // toggle area color off
         if (self.type === 'area') {
           d3.select(d.point.section)
-            .style('fill', function(dd, ii){
+            .style('fill', function(dd){
               return self._.color(dd.value, d.point.sectionIndex);
             })
             .style('fill-opacity', self.options.type == 'layered' ? self.options.layerOpacity : 1);
@@ -1466,7 +1465,7 @@
           self.$.focus.call(translate, -100, -100);
         }
       })
-      .on('click', function(d, i){
+      .on('click', function(d){
         triggerEvent('click:data', self, {
           section: d.point.sectionIndex,
           point: d.point.pointIndex,
@@ -1484,7 +1483,7 @@
 
     var self = this;
     var pad = this.options.tooltip.padding;
-    lineHeight = this.options.tooltip.fontSize * 1.5;
+    var lineHeight = this.options.tooltip.fontSize * 1.5;
     var textX = 0;
     var textY = this.options.tooltip.fontSize;
 
