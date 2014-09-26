@@ -95,7 +95,8 @@
   //
   function Chart(element, type, data, options) {
     if (!plugin.types[type]) return null;
-
+    window.charts = window.charts || {};
+    window.charts[type] = this;
     this.element = element;
     this.$el = $(element);
     this.type = type;
@@ -893,7 +894,7 @@
       if (this.options.axis.y === false) this._.axisY = null;
 
       // add tooltip elements for hover
-      tooltipUtils.call(this, false);
+      overlayUtils.call(this);
 
       // convert data for bar section measurements
       this._.getBarData = function(data) {
@@ -943,7 +944,7 @@
       };
 
       // bar update transition
-      this._.updateSection = function(sectionData) {
+      this._.updateSection = function(sectionData, i, isInteractive) {
         d3.select(this).transition()
           .duration(self.options.animationDuration)
             .attr('transform', function(d){
@@ -956,7 +957,8 @@
         section.call(self._.updateSubsection);
 
         section.enter().append('rect')
-          .attr('fill', function(d){ return d.color; })
+          .attr('fill', isInteractive ? self.options.frame.backgroundColor : function(d){ return d.color; })
+          .attr('fill-opacity', isInteractive ? 0.1 : 1)
           .attr('height', 0)
           .attr('y', function(){ return self._.height; })
           .attr('width', function(){
@@ -996,29 +998,45 @@
     },
     renderChart: function() {
       var self = this;
-
       var oldBandWidth = this._.scaleX.rangeBand();
+      var sections, interactive;
 
       // prepare data and scales for rendering
       this.prepareData();
 
-      this.$.sections = this.$.chart.selectAll('g')
+      sections = this.$.chart.selectAll('g')
+        .data(this._.barsData, this._.labelX);
+      interactive = this.$.interactions.selectAll('g')
         .data(this._.barsData, this._.labelX);
 
-      this.$.sections.each(this._.updateSection);
+      sections.each(this._.updateSection);
+      interactive.each(function(d, i){
+        self._.updateSection.call(this, d, i, true);
+      });
 
-      this.$.sections.enter().append('g')
+      sections.enter().append('g')
         .attr('transform', function(d){
           return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
         })
         .each(this._.updateSection);
+      interactive.enter().append('g')
+        .attr('transform', function(d){
+          return 'translate('+cleanPx(self._.scaleX(d.label))+',0.5)';
+        })
+        .each(function(d, i){
+          self._.updateSection.call(this, d, i, true);
+        });
 
-      this.$.sections.selectAll('rect')
+      // attach sections to data and add appropriate classes
+      sections.selectAll('rect')
         .each(function(d){
           d.element = this;
         })
         .classed('jqchart-section', true)
-        .classed('jqchart-section-clickable', true)
+        .classed('jqchart-section-clickable', true);
+
+      // add events to interaction layer
+      interactive.selectAll('rect')
         .on('click', function(d, a, i){
           triggerEvent('click:data', self, {
             section: i,
@@ -1055,20 +1073,28 @@
               return self._.color(d.section, d.subsection);
             });
 
-          // // move tooltip out
+          // move tooltip out
           if (self.options.tooltip.enabled) {
             self.$.focus.call(translate, -100, -100);
           }
         });
 
-      this.$.sections.exit().selectAll('rect')
-        .transition()
-          .duration(this.options.animationDuration)
+      // remove old sections that are now gone
+      sections.exit().selectAll('rect').call(removeSection);
+      interactive.exit().selectAll('rect').call(removeSection);
+
+      function removeSection() {
+        if (!this || !this.length) return;
+        d3.select(this).transition()
+          .duration(self.options.animationDuration)
             .attr('y', 170)
             .attr('height', 0)
             .attr('width', 0)
             .call(translate, oldBandWidth / 2, 0)
             .remove();
+      }
+
+      this.$.sections = sections;
     },
     renderData: function() {
       var self = this;
@@ -1350,6 +1376,17 @@
     this.$.interactions = this.$.frame.append('g').attr('class', 'jqchart-hover-overlay');
   }
 
+  // adding hover capabilities to chart items by recreating them in overlay
+  function overlayUtils() {
+    var self = this;
+    if (!hasSVG) return;
+
+    tooltipUtils.call(this, false);
+
+    // add layer group for interaction targets
+    this.$.interactions = this.$.frame.append('g').attr('class', 'jqchart-hover-overlay');
+  }
+
   // add the tooltip popup
   function tooltipUtils(hasPoint) {
     if (!this.options.tooltip.enabled) return;
@@ -1408,7 +1445,7 @@
       .classed('jqchart-section-clickable', true)
       .style('fill', this.options.frame.backgroundColor)
       .style('fill-opacity', 0.1)
-      // .style('stroke', 'blue').style('stroke-opacity', 0.2)
+      // .style('stroke', 'blue').style('stroke-opacity', 0.2) // used for debugging hover positions
       .attr('d', function(d) {
         if (d.length > 1)
           return 'M' + d.join('L') + 'Z';
