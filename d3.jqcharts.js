@@ -389,6 +389,17 @@
           return self._.scaleX(d[1]);
         });
 
+      this._.emptyArea = d3.svg.area()
+        .y(function(d, i){
+          return self._.scaleY(i);
+        })
+        .x0(function(d){
+          return self._.scaleX(0);
+        })
+        .x1(function(d){
+          return self._.scaleX(0);
+        });
+
       this._.trapezoid = function(data){
         var output = [];
 
@@ -461,8 +472,54 @@
       enterGroup.append('path')
         .classed('jqchart-section', true)
         .classed('jqchart-section-clickable', true)
-        .attr('d', this._.area)
-        .attr('fill', this._.color);
+        // .attr('d', this._.area)
+        .attr('d', this._.emptyArea)
+        .attr('fill', this._.color)
+        .transition()
+          .delay(function(d, i){ return i * 500; })
+          .ease(function(t){
+            return t * t;
+            // var t1 = t / 1;
+            // return t1 > 1 ? 1 : t1;
+          })
+          .duration(this.options.animationDuration)
+          .attr('d', this._.area);
+
+      function mirrorFunction(t, f) {
+        if (t < 0.5) {
+          t *= 2;
+        } else {
+          t = 1 - t;
+        }
+        return f(t);
+      }
+      function tornadoEasing(t) {
+        return t * t;
+      }
+
+      // function tornadoEasing(h) {
+      //   if (!arguments.length) h = 0.25;
+      //   var b0 = 1 - h,
+      //       b1 = b0 * (1 - b0) + b0,
+      //       b2 = b0 * (1 - b1) + b1,
+      //       x0 = 2 * Math.sqrt(h),
+      //       x1 = x0 * Math.sqrt(h),
+      //       x2 = x1 * Math.sqrt(h),
+      //       t0 = 1 / (1 + x0 + x1 + x2),
+      //       t1 = t0 + t0 * x0,
+      //       t2 = t1 + t0 * x1,
+      //       m0 = t0 + t0 * x0 / 2,
+      //       m1 = t1 + t0 * x1 / 2,
+      //       m2 = t2 + t0 * x2 / 2,
+      //       a = 1 / (t0 * t0);
+      //   return function(t) {
+      //     return t >= 1 ? 1
+      //         : t < t0 ? a * t * t
+      //         : t < t1 ? a * (t -= m0) * t + b0
+      //         : t < t2 ? a * (t -= m1) * t + b1
+      //         : a * (t -= m2) * t + b2;
+      //   };
+      // }
 
       var enterLabels = enterGroup.append('g')
         .each(function(d, i){
