@@ -886,6 +886,11 @@
       barSpacing: 0.3,
       gridAbove: false
     },
+		label: {
+			renderer: function(labelName, labelIndex) {
+				return labelName;
+			}
+		},
     tooltip: {
       renderer: tooltipBarDefault
     }
@@ -908,8 +913,8 @@
       if (this.options.axis.x !== false) {
         this._.axisX = d3.svg.axis().orient('bottom').tickSize(0);
       }
-      this._.labelX = function(d){
-        return d.label;
+      this._.labelX = function(d, i){
+        return self.options.label.renderer(d.label, i);
       };
 
       // y axis
