@@ -72,7 +72,7 @@
       fontFamily: 'Verdana',
       fontWeight: 200,
       fontColor: '#444',
-			dotSize: 7,
+      dotSize: 7,
       dotColor: '#676767',
       dotBorderWidth: 0,
       dotBorderColor: '#000',
@@ -886,11 +886,11 @@
       barSpacing: 0.3,
       gridAbove: false
     },
-		label: {
-			renderer: function(labelName, labelIndex) {
-				return labelName;
-			}
-		},
+    label: {
+      renderer: function(labelName, labelIndex) {
+        return labelName;
+      }
+    },
     tooltip: {
       renderer: tooltipBarDefault
     }
@@ -1549,10 +1549,10 @@
     var self = this;
     var pad = this.options.tooltip.padding;
     var lineHeight = this.options.tooltip.fontSize * 1.5;
-		var capHeight = this.options.tooltip.fontSize * 0.8;
-		var dotRadius = this.options.tooltip.dotSize / 2 + this.options.tooltip.dotBorderWidth;
+    var capHeight = this.options.tooltip.fontSize * 0.8;
+    var dotRadius = this.options.tooltip.dotSize / 2 + this.options.tooltip.dotBorderWidth;
     var offsetX = 0;
-		var offsetY = dotRadius * 2;
+    var offsetY = dotRadius * 2;
 
     // get tooltip text, calling line renderer with point data
     var tooltipText = this.options.tooltip.renderer.call(window, renderArgs);
@@ -1572,23 +1572,23 @@
         .text(this);
     });
 
-		// get the tooltip width in pixels
+    // get the tooltip width in pixels
     var textWidth = pad * 2 + Math.max.apply(null, $.map(this.$.focus.selectAll('text')[0], function(text){
       return text.getBoundingClientRect().width;
     }));
 
-		offsetX = (tooltipX / this._.width) * -textWidth;
-		var tooltipHeight = (pad * 2) + capHeight + (lineHeight * (tooltipText.length - 1));
-		if (tooltipY + tooltipHeight + offsetY > this._.height) {
-			offsetY = (offsetY + tooltipHeight) * -1;
-		}
-		// render the background rectangle
+    offsetX = (tooltipX / this._.width) * -textWidth;
+    var tooltipHeight = (pad * 2) + capHeight + (lineHeight * (tooltipText.length - 1));
+    if (tooltipY + tooltipHeight + offsetY > this._.height) {
+      offsetY = (offsetY + tooltipHeight) * -1;
+    }
+    // render the background rectangle
     this.$.focus.selectAll('rect')
       .attr('height', lineHeight * tooltipText.length - (lineHeight / 3) + pad * 2)
       .attr('width', textWidth)
-			.call(translate, offsetX, offsetY);
-		this.$.focus.selectAll('text')
-			.call(translate, offsetX, offsetY);
+      .call(translate, offsetX, offsetY);
+    this.$.focus.selectAll('text')
+      .call(translate, offsetX, offsetY);
 
     // move tooltip
     this.$.focus.call(translate, tooltipX, tooltipY);
@@ -1691,3 +1691,5 @@
   }
 
 }(this, jQuery));
+
+
