@@ -72,6 +72,7 @@
       fontFamily: 'Verdana',
       fontWeight: 200,
       fontColor: '#444',
+			dotSize: 7,
       dotColor: '#676767',
       dotBorderWidth: 0,
       dotBorderColor: '#000',
@@ -480,7 +481,7 @@
             // tornado polygon width & color over time
             // `d = sin( (0.5 + 2n) * PI )`
             // n = number of rotations & limit = [-1 (backside),1 (frontside)]
-            return t > 1 ? 1 : Math.abs(Math.sin(1.5 * Math.PI * t));
+            return t > 1 ? 1 : Math.abs(Math.sin(0.5 * Math.PI * t));
           })
           .attr('fill', this._.color)
           .duration(this.options.animationDuration - 500)
@@ -1422,7 +1423,7 @@
     if (hasPoint) {
       // tooltip dot
       this.$.focus.append('circle')
-        .attr('r', 3.5)
+        .attr('r', this.options.tooltip.dotSize / 2)
         .style('stroke', this.options.tooltip.dotBorderColor)
         .style('stroke-width', this.options.tooltip.dotBorderWidth)
         .style('fill', this.options.tooltip.dotColor);
@@ -1543,22 +1544,15 @@
     var self = this;
     var pad = this.options.tooltip.padding;
     var lineHeight = this.options.tooltip.fontSize * 1.5;
-    var textX = 0;
-    var textY = this.options.tooltip.fontSize;
+		var capHeight = this.options.tooltip.fontSize * 0.8;
+		var dotRadius = this.options.tooltip.dotSize / 2 + this.options.tooltip.dotBorderWidth;
+    var offsetX = 0;
+		var offsetY = dotRadius * 2;
 
     // get tooltip text, calling line renderer with point data
     var tooltipText = this.options.tooltip.renderer.call(window, renderArgs);
     
     if (!(tooltipText instanceof Array)) tooltipText = [tooltipText];
-
-    // account for number of lines in vertical offset
-    textY *= -1.5 * tooltipText.length + 0.5;
-
-    // account for hitting the edge
-    textX = (tooltipX / this._.width) * -50 + 25;
-    if (tooltipY + textY < 0 + this._.marginTop) {
-      textY = this.options.tooltip.fontSize + 5;
-    }
 
     // remove old text
     this.$.focus.selectAll('text').remove();
@@ -1567,20 +1561,29 @@
     $.each(tooltipText, function(lineI){
       self.$.focus.append('text')
         .classed('jqchart-tooltip-line-' + lineI, true)
-        .attr('x', textX)
-        .attr('y', textY + (lineHeight * lineI))
+        .attr('x', pad)
+        .attr('y', pad + capHeight + (lineHeight * lineI))
         .call(styleText, self.options.tooltip, 'left')
         .text(this);
     });
 
-    var textWidth = Math.max.apply(null, $.map(this.$.focus.selectAll('text')[0], function(text){
+		// get the tooltip width in pixels
+    var textWidth = pad * 2 + Math.max.apply(null, $.map(this.$.focus.selectAll('text')[0], function(text){
       return text.getBoundingClientRect().width;
     }));
 
+		offsetX = (tooltipX / this._.width) * -textWidth;
+		var tooltipHeight = (pad * 2) + capHeight + (lineHeight * (tooltipText.length - 1));
+		if (tooltipY + tooltipHeight + offsetY > this._.height) {
+			offsetY = (offsetY + tooltipHeight) * -1;
+		}
+		// render the background rectangle
     this.$.focus.selectAll('rect')
-      .attr('height', lineHeight * tooltipText.length - (lineHeight / 2) + pad * 2)
-      .attr('width', textWidth + (2 * pad))
-      .call(translate, textX - pad, textY - (self.options.tooltip.fontSize/1.3) - pad);
+      .attr('height', lineHeight * tooltipText.length - (lineHeight / 3) + pad * 2)
+      .attr('width', textWidth)
+			.call(translate, offsetX, offsetY);
+		this.$.focus.selectAll('text')
+			.call(translate, offsetX, offsetY);
 
     // move tooltip
     this.$.focus.call(translate, tooltipX, tooltipY);
